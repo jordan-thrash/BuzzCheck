@@ -121,6 +121,7 @@ export const WheresMyKeys = ({ onFinish }) => {
             key={i} 
             onPointerDown={(e) => { e.preventDefault(); handleTap(i); }}
             className={`aspect-square rounded-xl border-2 transition-all duration-100 ${(flashIndex === i || userFlashIndex === i) ? 'bg-neon-purple border-white shadow-[0_0_15px_#d946ef] scale-95' : 'bg-gray-800 border-gray-600'}`}
+            style={{ touchAction: 'none' }}
           >
             {(flashIndex === i || userFlashIndex === i) && <Car className="mx-auto text-white" />}
           </button>
@@ -140,7 +141,7 @@ export const TacoRun = ({ onFinish }) => {
     else if (state === 'READY') { const time = Date.now() - startTime; onFinish(time < 300 ? 10 : time < 400 ? 8 : time < 550 ? 5 : 2); }
   };
   return (
-    <div className={`w-full h-64 rounded-xl flex items-center justify-center cursor-pointer ${state === 'WAITING' ? 'bg-gray-800' : 'bg-neon-green'}`} onMouseDown={handleClick} onTouchStart={handleClick}>
+    <div className={`w-full h-64 rounded-xl flex items-center justify-center cursor-pointer ${state === 'WAITING' ? 'bg-gray-800' : 'bg-neon-green'}`} onPointerDown={(e) => { e.preventDefault(); handleClick(); }} style={{ touchAction: 'none' }}>
       {state === 'WAITING' ? <p className="text-xl font-bold">WAIT FOR GREEN...</p> : <Bell className="w-20 h-20 text-black animate-bounce" />}
     </div>
   );
@@ -359,10 +360,9 @@ export const AlphabetSoup = ({ onFinish }) => {
       {items.map((l) => l.char >= target && (
         <button
           key={l.char}
-          onMouseDown={(e) => { e.stopPropagation(); handleTap(l.char); }}
-          onTouchStart={(e) => { e.stopPropagation(); handleTap(l.char); }}
+          onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); handleTap(l.char); }}
           className="absolute w-12 h-12 bg-gray-800 border border-white rounded-full flex items-center justify-center text-xl font-bold shadow-lg active:scale-90 transition-transform"
-          style={{ left: `${l.x}%`, top: `${l.y}%` }}
+          style={{ left: `${l.x}%`, top: `${l.y}%`, touchAction: 'none' }}
         >
           {l.char}
         </button>
@@ -838,7 +838,7 @@ export const RedLight = ({ onFinish }) => {
   };
 
   return (
-    <div className={`w-full h-80 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-colors duration-200 ${color === 'GREEN' ? 'bg-green-500' : color === 'YELLOW' ? 'bg-yellow-400' : 'bg-red-600'}`} onMouseDown={handleTap} onTouchStart={handleTap}>
+    <div className={`w-full h-80 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-colors duration-200 ${color === 'GREEN' ? 'bg-green-500' : color === 'YELLOW' ? 'bg-yellow-400' : 'bg-red-600'}`} onPointerDown={(e) => { e.preventDefault(); handleTap(); }} style={{ touchAction: 'none' }}>
         <div className="text-white font-black text-4xl mb-4 drop-shadow-md">{color === 'GREEN' ? 'TAP!!!' : color === 'YELLOW' ? 'STEADY...' : 'STOP!'}</div>
         <div className="text-2xl font-mono font-bold text-black bg-white/50 px-4 py-1 rounded">{clicks}/15</div>
     </div>
@@ -929,10 +929,12 @@ export const PerfectPour = ({ onFinish }) => {
         </div>
       </div>
       <button 
-        onMouseDown={start} onMouseUp={stop} onMouseLeave={stop}
-        onTouchStart={start} onTouchEnd={stop} 
+        onPointerDown={(e) => { e.preventDefault(); start(); }} 
+        onPointerUp={(e) => { e.preventDefault(); stop(); }} 
+        onPointerLeave={(e) => { e.preventDefault(); stop(); }}
         disabled={done} 
         className="w-full bg-yellow-500 text-black font-bold py-4 rounded-xl active:scale-95 disabled:opacity-50"
+        style={{ touchAction: 'none' }}
       >
         {done ? (fill >= 100 ? "SPILLED!" : "DONE") : "HOLD TO POUR"}
       </button>
