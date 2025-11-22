@@ -6,7 +6,7 @@ import {
   Lock, Unlock, Droplet, Smartphone, ArrowLeft, ArrowRight, 
   AlertOctagon, Eye, ArrowDown, XCircle, Send
 } from 'lucide-react';
-import { getRandomInt, shuffleArray } from '../utils/helpers';
+import { getRandomInt, shuffleArray } from './utils/helpers';
 
 // --- GAMES ---
 
