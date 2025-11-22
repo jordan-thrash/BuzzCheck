@@ -7,6 +7,7 @@ import * as Games from './games';
 
 const App = () => {
   const [view, setView] = useState('HOME'); // HOME, GAME, RESULT, ADMIN
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [currentGame, setCurrentGame] = useState(null);
   const [finalScore, setFinalScore] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -77,6 +78,7 @@ const App = () => {
           {loading ? <div className="flex flex-col items-center h-40"><div className="w-16 h-16 border-4 border-t-neon-pink border-r-neon-blue border-b-neon-green border-l-yellow-400 rounded-full animate-spin mb-4"></div><p className="font-mono animate-pulse">Calibrating...</p></div> : 
           <button onClick={() => startGame()} className="w-full bg-white text-black text-2xl font-black py-6 rounded-xl hover:scale-105 active:scale-95 transition-transform shadow-[0_0_30px_rgba(255,255,255,0.3)] border-4 border-transparent hover:border-neon-pink">CHECK MY STATUS</button>}
           <div className="mt-12 grid grid-cols-5 gap-4 opacity-50 text-gray-600"><Beer className="mx-auto"/><Brain className="mx-auto"/><Pizza className="mx-auto"/><Ghost className="mx-auto"/><Car className="mx-auto"/></div>
+          <button onClick={() => setShowDisclaimer(true)} className="mt-8 text-xs text-gray-500 hover:text-white underline decoration-dotted transition-colors">⚠️ Legal Disclaimer</button>
         </div>
       )}
 
@@ -98,6 +100,38 @@ const App = () => {
         <div className="z-10 text-center max-w-md w-full animate-scale-in">
           <div className="bg-gray-900 p-8 rounded-2xl border border-gray-700 shadow-2xl">{result.icon}<h2 className="text-gray-400 uppercase tracking-widest text-sm mb-2">Score</h2><div className="text-8xl font-black mb-2 flex justify-center items-baseline"><span className={result.color}>{finalScore}</span><span className="text-4xl text-gray-600">/10</span></div><div className="h-px w-full bg-gray-700 my-6"></div><h3 className="text-xl font-bold text-white mb-1">Est. Intake:</h3><p className={`text-2xl font-bold mb-6 ${result.color}`}>{result.d}</p><div className="bg-black p-4 rounded-lg border border-gray-700 rotate-1"><p className="text-lg italic text-white">"{result.c}"</p></div></div>
           <button onClick={() => setView('HOME')} className="mt-8 flex items-center justify-center gap-2 mx-auto text-gray-400 hover:text-white transition-colors"><RotateCcw size={20} /><span>Test Again</span></button>
+        </div>
+      )}
+
+      {showDisclaimer && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md animate-fade-in">
+          <div className="bg-gray-900 border border-red-500/30 p-6 rounded-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-[0_0_50px_rgba(220,38,38,0.2)]">
+            <h2 className="text-2xl font-black text-red-500 mb-4 flex items-center gap-2">
+              <Skull size={24} /> CRITICAL DISCLAIMER
+            </h2>
+            <div className="space-y-4 text-gray-300 text-sm leading-relaxed text-left">
+              <p className="font-bold text-white">THIS APP IS FOR ENTERTAINMENT PURPOSES ONLY.</p>
+              <p>BuzzCheck is a game designed for amusement. It is NOT a scientific instrument, a breathalyzer, or a valid medical test of sobriety or cognitive ability.</p>
+              <p>The scores, comments, and estimations provided by this application are randomly generated or based on simple game mechanics and should never be used to determine:</p>
+              <ul className="list-disc pl-5 space-y-1 text-gray-400">
+                <li>Your Blood Alcohol Concentration (BAC).</li>
+                <li>Your ability to operate a motor vehicle.</li>
+                <li>Your ability to operate heavy machinery.</li>
+                <li>Your ability to make legal or medical decisions.</li>
+              </ul>
+              <div className="bg-red-500/10 border border-red-500/50 p-4 rounded-lg my-4">
+                <p className="text-red-400 font-bold mb-2">NEVER DRINK AND DRIVE.</p>
+                <p className="text-xs text-red-300">If you have consumed alcohol, do not drive. Call a taxi, a ride-share service, or a friend. Reliance on this app to determine fitness to drive is dangerous and strictly prohibited.</p>
+              </div>
+              <p className="text-xs text-gray-500">By using this application, you acknowledge that the creators accept no liability for any actions taken based on the game's results.</p>
+            </div>
+            <button 
+              onClick={() => setShowDisclaimer(false)}
+              className="w-full mt-6 bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-xl transition-colors border border-gray-700"
+            >
+              I UNDERSTAND
+            </button>
+          </div>
         </div>
       )}
       
