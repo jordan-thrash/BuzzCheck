@@ -12,6 +12,7 @@ const App = () => {
   const [finalScore, setFinalScore] = useState(0);
   const [loading, setLoading] = useState(false);
   const [isUnlocking, setIsUnlocking] = useState(false);
+  const [fromAdmin, setFromAdmin] = useState(false);
   const secretTimerRef = useRef(null);
   const animTimerRef = useRef(null);
 
@@ -54,7 +55,15 @@ const App = () => {
 
   const startSecretUnlock = () => { animTimerRef.current = setTimeout(() => setIsUnlocking(true), 1000); secretTimerRef.current = setTimeout(() => { setView('ADMIN'); setIsUnlocking(false); }, 3000); };
   const cancelSecretUnlock = () => { clearTimeout(secretTimerRef.current); clearTimeout(animTimerRef.current); setIsUnlocking(false); };
-  const startGame = (g = null) => { setLoading(true); setTimeout(() => { setCurrentGame(g || GAMES[getRandomInt(0, GAMES.length - 1)]); setView('GAME'); setLoading(false); }, 1000); };
+  const startGame = (g = null) => { 
+    setFromAdmin(view === 'ADMIN');
+    setLoading(true); 
+    setTimeout(() => { 
+      setCurrentGame(g || GAMES[getRandomInt(0, GAMES.length - 1)]); 
+      setView('GAME'); 
+      setLoading(false); 
+    }, 1000); 
+  };
   const handleGameFinish = (s) => { setFinalScore(s); setView('RESULT'); };
   
   const result = (() => {
@@ -120,7 +129,7 @@ const App = () => {
               </p>
             </div>
           </div>
-          <button onClick={() => setView('HOME')} className="mt-8 flex items-center justify-center gap-2 mx-auto text-gray-400 hover:text-white transition-colors"><RotateCcw size={20} /><span>Test Again</span></button>
+          <button onClick={() => setView(fromAdmin ? 'ADMIN' : 'HOME')} className="mt-8 flex items-center justify-center gap-2 mx-auto text-gray-400 hover:text-white transition-colors"><RotateCcw size={20} /><span>Test Again</span></button>
         </div>
       )}
 

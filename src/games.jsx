@@ -12,29 +12,68 @@ import { getRandomInt, shuffleArray } from './utils/helpers';
 
 export const HoldMyBeer = ({ onFinish }) => {
   const [position, setPosition] = useState(50);
+  const positionRef = useRef(50);
   const [target, setTarget] = useState(50);
+  const targetRef = useRef(50);
+  const velocityRef = useRef(0.5);
   const [score, setScore] = useState(100);
+  const scoreRef = useRef(100);
   const [timeLeft, setTimeLeft] = useState(10);
+  const requestRef = useRef();
+
+  const handleSlide = (e) => {
+    const val = Number(e.target.value);
+    setPosition(val);
+    positionRef.current = val;
+  };
+
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (timeLeft > 0) {
-        const move = getRandomInt(-20, 20);
-        setTarget(prev => Math.min(90, Math.max(10, prev + move)));
-        setTimeLeft(prev => prev - 1);
-        if (Math.abs(position - target) > 15) setScore(prev => Math.max(0, prev - 8));
-      } else { clearInterval(interval); onFinish(Math.ceil(score / 10)); }
-    }, 800);
-    return () => clearInterval(interval);
-  }, [timeLeft, position, target, onFinish]);
+    const startTime = Date.now();
+    const animate = () => {
+      const now = Date.now();
+      const elapsed = (now - startTime) / 1000;
+      const remaining = Math.max(0, 10 - elapsed);
+      
+      setTimeLeft(remaining.toFixed(1));
+
+      if (remaining <= 0) {
+        onFinish(Math.ceil(scoreRef.current / 10));
+        return;
+      }
+
+      // Move Target
+      let newPos = targetRef.current + velocityRef.current;
+      if (newPos >= 90 || newPos <= 10) velocityRef.current *= -1;
+      
+      // Random Direction Change (0.5% chance)
+      if (Math.random() < 0.005) velocityRef.current *= -1;
+
+      targetRef.current = Math.max(10, Math.min(90, newPos));
+      setTarget(targetRef.current);
+
+      // Check overlap (Tolerance 10)
+      if (Math.abs(positionRef.current - targetRef.current) > 10) {
+        scoreRef.current = Math.max(0, scoreRef.current - 0.4); 
+        setScore(scoreRef.current);
+      }
+
+      requestRef.current = requestAnimationFrame(animate);
+    };
+
+    requestRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(requestRef.current);
+  }, [onFinish]);
+
   return (
     <div className="flex flex-col items-center w-full max-w-md p-4">
       <h3 className="text-2xl font-bold text-neon-pink mb-4">HOLD MY BEER</h3>
       <div className="relative w-full h-16 bg-gray-800 rounded-full mb-8 border-2 border-gray-600 overflow-hidden">
-        <div className="absolute top-0 h-full w-20 bg-yellow-500/30 border-x-2 border-yellow-500 flex items-center justify-center transition-all duration-700" style={{ left: `calc(${target}% - 40px)` }}><Beer className="text-yellow-400" /></div>
-        <div className="absolute top-0 h-full w-2 bg-neon-pink transition-all duration-75 ease-linear" style={{ left: `${position}%` }} />
+        <div className="absolute top-0 h-full w-20 bg-yellow-500/30 border-x-2 border-yellow-500 flex items-center justify-center transition-none" style={{ left: `calc(${target}% - 40px)` }}><Beer className="text-yellow-400" /></div>
+        <div className="absolute top-0 h-full w-2 bg-neon-pink transition-none" style={{ left: `${position}%` }} />
       </div>
-      <input type="range" min="0" max="100" value={position} onChange={(e) => setPosition(Number(e.target.value))} className="w-full h-12 accent-neon-pink cursor-pointer" />
+      <input type="range" min="0" max="100" value={position} onChange={handleSlide} className="w-full h-12 accent-neon-pink cursor-pointer" />
       <div className="mt-4 text-xl font-mono text-white">{timeLeft}s</div>
+      <div className="w-full bg-gray-700 h-2 rounded-full mt-2"><div className="h-full bg-green-500 transition-all" style={{ width: `${score}%`, backgroundColor: score < 50 ? 'red' : 'lime' }}></div></div>
     </div>
   );
 };
@@ -73,25 +112,52 @@ export const WheresMyKeys = ({ onFinish }) => {
   const [round, setRound] = useState(1);
   const [flashIndex, setFlashIndex] = useState(null);
   const [userFlashIndex, setUserFlashIndex] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(10);
+  const timerRef = useRef(null);
 
   useEffect(() => { startRound(1, []); }, []);
 
+  // Timer for user input
+  useEffect(() => {
+      if (!playing && sequence.length > 0) {
+          timerRef.current = setInterval(() => {
+              setTimeLeft(prev => {
+                  if (prev <= 0) {
+                      clearInterval(timerRef.current);
+                      onFinish(0);
+                      return 0;
+                  }
+                  return prev - 1;
+              });
+          }, 1000);
+      } else {
+          clearInterval(timerRef.current);
+          setTimeLeft(10); // Reset timer for next round
+      }
+      return () => clearInterval(timerRef.current);
+  }, [playing, sequence, onFinish]);
+
   const startRound = (currentRound, currentSeq) => {
-    const newStep = getRandomInt(0, 8);
+    const newStep = getRandomInt(0, 15);
     const nextSeq = [...currentSeq, newStep];
     setSequence(nextSeq);
     setRound(currentRound);
-    playSequence(nextSeq);
+    playSequence(nextSeq, currentRound);
   };
 
-  const playSequence = (seq) => {
+  const playSequence = (seq, currentRound) => {
     setPlaying(true);
     userSequence.current = [];
     let i = 0;
+    
+    // Progressively faster
+    const speed = Math.max(150, 400 - (currentRound * 50));
+    const flashDuration = Math.max(100, 250 - (currentRound * 30));
+
     const interval = setInterval(() => {
       if (i >= seq.length) { clearInterval(interval); setFlashIndex(null); setPlaying(false); return; }
-      setFlashIndex(seq[i]); setTimeout(() => setFlashIndex(null), 400); i++;
-    }, 600);
+      setFlashIndex(seq[i]); setTimeout(() => setFlashIndex(null), flashDuration); i++;
+    }, speed);
   };
 
   const handleTap = (index) => {
@@ -102,11 +168,11 @@ export const WheresMyKeys = ({ onFinish }) => {
     const newUserSeq = userSequence.current;
     
     const currentIndex = newUserSeq.length - 1;
-    if (newUserSeq[currentIndex] !== sequence[currentIndex]) { onFinish(Math.min(10, (round - 1) * 3)); return; }
+    if (newUserSeq[currentIndex] !== sequence[currentIndex]) { onFinish(Math.min(10, (round - 1) * 2)); return; }
     if (newUserSeq.length === sequence.length) { 
-      if (round === 4) { onFinish(10); } 
+      if (round === 5) { onFinish(10); } 
       else { 
-        setPlaying(true); // Block input during transition
+        setPlaying(true); 
         setTimeout(() => startRound(round + 1, sequence), 800); 
       } 
     }
@@ -114,20 +180,23 @@ export const WheresMyKeys = ({ onFinish }) => {
 
   return (
     <div className="w-full max-w-md p-4 text-center">
-      <h3 className="text-2xl font-bold text-neon-purple mb-4">WHERE'S MY KEYS?</h3>
-      <div className="grid grid-cols-3 gap-3 mx-auto max-w-[300px]">
-        {[...Array(9)].map((_, i) => (
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-2xl font-bold text-neon-purple">WHERE'S MY KEYS?</h3>
+        <span className="text-red-500 font-mono font-bold">{!playing ? `${timeLeft}s` : 'WATCH'}</span>
+      </div>
+      <div className="grid grid-cols-4 gap-2 mx-auto max-w-[320px]">
+        {[...Array(16)].map((_, i) => (
           <button 
             key={i} 
             onPointerDown={(e) => { e.preventDefault(); handleTap(i); }}
-            className={`aspect-square rounded-xl border-2 transition-all duration-100 ${(flashIndex === i || userFlashIndex === i) ? 'bg-neon-purple border-white shadow-[0_0_15px_#d946ef] scale-95' : 'bg-gray-800 border-gray-600'}`}
+            className={`aspect-square rounded-lg border-2 transition-all duration-100 ${(flashIndex === i || userFlashIndex === i) ? 'bg-neon-purple border-white shadow-[0_0_15px_#d946ef] scale-95' : 'bg-gray-800 border-gray-600'}`}
             style={{ touchAction: 'none' }}
           >
-            {(flashIndex === i || userFlashIndex === i) && <Car className="mx-auto text-white" />}
+            {(flashIndex === i || userFlashIndex === i) && <Car className="mx-auto text-white w-5 h-5" />}
           </button>
         ))}
       </div>
-      <p className="mt-4 text-gray-400">{playing ? "Watch..." : "Your turn"}</p>
+      <p className="mt-4 text-gray-400">{playing ? `Round ${round}/5` : "Repeat Pattern"}</p>
     </div>
   );
 };
@@ -190,23 +259,76 @@ export const TipCalculator = ({ onFinish }) => {
 
 export const VibeCheck = ({ onFinish }) => {
   const colors = [{ name: "RED", hex: "text-red-500", val: "red" }, { name: "BLUE", hex: "text-blue-500", val: "blue" }, { name: "GREEN", hex: "text-green-500", val: "green" }, { name: "YELLOW", hex: "text-yellow-400", val: "yellow" }];
-  const [round, setRound] = useState(0);
-  const [current, setCurrent] = useState({});
+  const [round, setRound] = useState(1);
+  const [current, setCurrent] = useState(null);
   const [options, setOptions] = useState([]);
   const [score, setScore] = useState(0);
-  const nextRound = useCallback(() => {
-    if (round >= 5) { onFinish(score * 2); return; }
-    const word = colors[getRandomInt(0, 3)]; let ink = colors[getRandomInt(0, 3)]; while (ink.val === word.val) ink = colors[getRandomInt(0, 3)];
-    setCurrent({ word: word.name, ink: ink.hex, correctVal: ink.val }); setOptions(shuffleArray(colors)); setRound(r => r + 1);
-  }, [round, score, onFinish]);
-  useEffect(() => { nextRound(); }, []);
-  const handleChoice = (val) => { if (val === current.correctVal) setScore(s => s + 1); nextRound(); };
+  const [timeLeft, setTimeLeft] = useState(10.0); // Back to 10s
+  const timerRef = useRef(null);
+
+  const generateRound = useCallback(() => {
+    const word = colors[getRandomInt(0, 3)]; 
+    let ink = colors[getRandomInt(0, 3)]; 
+    while (ink.val === word.val) ink = colors[getRandomInt(0, 3)];
+    setCurrent({ word: word.name, ink: ink.hex, correctVal: ink.val }); 
+    setOptions(shuffleArray([...colors]));
+  }, []);
+
+  useEffect(() => {
+    generateRound();
+    timerRef.current = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 0) {
+          clearInterval(timerRef.current);
+          onFinish(0);
+          return 0;
+        }
+        return prev - 0.1;
+      });
+    }, 100);
+    return () => clearInterval(timerRef.current);
+  }, [onFinish, generateRound]);
+
+  const handleChoice = (val) => {
+    let newScore = score;
+    if (val === current.correctVal) newScore += 1;
+    setScore(newScore);
+
+    if (round >= 5) {
+      clearInterval(timerRef.current);
+      // Scoring: Base score (max 10). 
+      // Penalty: If took too long (timeLeft < 6s), deduct points.
+      let finalScore = newScore * 2;
+      if (timeLeft < 6.0) {
+          // Deduct 1 point for every second below 6
+          finalScore -= Math.ceil(6.0 - timeLeft);
+      }
+      onFinish(Math.max(0, finalScore));
+    } else {
+      setRound(r => r + 1);
+      generateRound();
+    }
+  };
+
+  if (!current) return null;
+
   return (
     <div className="w-full max-w-md p-4 text-center">
-      <h3 className="text-2xl font-bold text-white mb-2">VIBE CHECK</h3>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-2xl font-bold text-white">VIBE CHECK</h3>
+        <span className="text-red-500 font-mono text-xl">{timeLeft.toFixed(1)}s</span>
+      </div>
       <p className="text-gray-400 text-sm mb-6">Click the COLOR, not the word!</p>
-      <div className="bg-gray-900 p-8 rounded-xl mb-8 border border-gray-700"><h2 className={`text-6xl font-black ${current.ink}`}>{current.word}</h2></div>
-      <div className="grid grid-cols-2 gap-4">{options.map((c) => <button key={c.name} onClick={() => handleChoice(c.val)} className="bg-gray-800 hover:bg-gray-700 py-4 rounded-lg font-bold border border-gray-600">{c.name}</button>)}</div>
+      <div className="bg-gray-900 p-8 rounded-xl mb-8 border border-gray-700">
+        <h2 className={`text-6xl font-black ${current.ink}`}>{current.word}</h2>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        {options.map((c) => (
+          <button key={c.name} onClick={() => handleChoice(c.val)} className="bg-gray-800 hover:bg-gray-700 py-4 rounded-lg font-bold border border-gray-600">
+            {c.name}
+          </button>
+        ))}
+      </div>
     </div>
   );
 };
@@ -216,9 +338,9 @@ export const PizzaKing = ({ onFinish }) => {
   const [order, setOrder] = useState([]);
   const [phase, setPhase] = useState('MEMORIZE');
   const [selection, setSelection] = useState([]);
-  useEffect(() => { setOrder(shuffleArray(ingredients).slice(0, 3)); setTimeout(() => setPhase('SELECT'), 3000); }, []);
-  const toggleIng = (ing) => { if (selection.includes(ing)) setSelection(selection.filter(i => i !== ing)); else if (selection.length < 3) setSelection([...selection, ing]); };
-  const submit = () => { const correct = selection.filter(i => order.includes(i)).length; const wrong = selection.filter(i => !order.includes(i)).length; let pts = (correct * 3.33) - (wrong * 2); onFinish(Math.max(0, Math.round(pts))); };
+  useEffect(() => { setOrder(shuffleArray(ingredients).slice(0, 4)); setTimeout(() => setPhase('SELECT'), 2000); }, []);
+  const toggleIng = (ing) => { if (selection.includes(ing)) setSelection(selection.filter(i => i !== ing)); else if (selection.length < 4) setSelection([...selection, ing]); };
+  const submit = () => { const correct = selection.filter(i => order.includes(i)).length; const wrong = selection.filter(i => !order.includes(i)).length; let pts = (correct * 2.5) - (wrong * 2); onFinish(Math.max(0, Math.round(pts))); };
   return (
     <div className="w-full max-w-md p-4 text-center">
       <h3 className="text-2xl font-bold text-orange-500 mb-4">PIZZA KING</h3>
@@ -231,8 +353,8 @@ export const ShotPong = ({ onFinish }) => {
   const [barPos, setBarPos] = useState(0);
   const [running, setRunning] = useState(true);
   const [dir, setDir] = useState(1);
-  useEffect(() => { let int; if (running) int = setInterval(() => { setBarPos(p => { if (p >= 100) { setDir(-1); return 99; } if (p <= 0) { setDir(1); return 1; } return p + (3 * dir); }); }, 16); return () => clearInterval(int); }, [running, dir]);
-  const handleStop = () => { setRunning(false); const dist = Math.abs(barPos - 50); onFinish(dist < 5 ? 10 : dist < 15 ? 8 : dist < 25 ? 5 : 0); };
+  useEffect(() => { let int; if (running) int = setInterval(() => { setBarPos(p => { if (p >= 100) { setDir(-1); return 99; } if (p <= 0) { setDir(1); return 1; } return p + (5 * dir); }); }, 16); return () => clearInterval(int); }, [running, dir]);
+  const handleStop = () => { setRunning(false); const dist = Math.abs(barPos - 50); onFinish(dist < 4 ? 10 : dist < 15 ? 8 : dist < 25 ? 5 : 0); };
   return (
     <div className="w-full max-w-md p-4 text-center" onMouseDown={handleStop} onTouchStart={handleStop}>
       <h3 className="text-2xl font-bold text-green-400 mb-8">SHOT PONG</h3>
@@ -247,14 +369,51 @@ export const ShotPong = ({ onFinish }) => {
 
 export const ToiletRush = ({ onFinish }) => {
   const [grid, setGrid] = useState([]);
-  const [timeLeft, setTimeLeft] = useState(8.0);
-  useEffect(() => { const size = 35; const t = getRandomInt(0, size); setGrid(Array(size + 1).fill('PERSON').map((_, i) => i === t ? 'TOILET' : 'PERSON')); }, []);
-  useEffect(() => { if (timeLeft > 0) { const t = setTimeout(() => setTimeLeft(p => Math.max(0, p - 0.1)), 100); return () => clearTimeout(t); } else onFinish(0); }, [timeLeft, onFinish]);
+  const [timeLeft, setTimeLeft] = useState(5.0);
+  const [hidden, setHidden] = useState(false);
+  const [targetIndex, setTargetIndex] = useState(-1);
+
+  useEffect(() => { 
+      const size = 47; 
+      const t = getRandomInt(0, size); 
+      setTargetIndex(t);
+      setGrid(Array(size + 1).fill('PERSON').map((_, i) => i === t ? 'TOILET' : 'PERSON')); 
+      
+      // Hide after 800ms
+      setTimeout(() => setHidden(true), 800);
+  }, []);
+
+  useEffect(() => { 
+      if (timeLeft > 0) { 
+          const t = setTimeout(() => setTimeLeft(p => Math.max(0, p - 0.1)), 100); 
+          return () => clearTimeout(t); 
+      } else onFinish(0); 
+  }, [timeLeft, onFinish]);
+
+  const handleClick = (i) => {
+      if (i === targetIndex) {
+          onFinish(Math.min(10, Math.ceil(timeLeft * 2.5)));
+      } else {
+          onFinish(0);
+      }
+  };
+
   return (
     <div className="w-full max-w-md p-4 text-center">
       <h3 className="text-2xl font-bold text-blue-300 mb-2">TOILET RUSH</h3>
       <span className="text-red-500 font-mono text-xl">{timeLeft.toFixed(1)}s</span>
-      <div className="grid grid-cols-6 gap-2 mt-4">{grid.map((item, i) => <button key={i} onClick={() => onFinish(item === 'TOILET' ? Math.ceil(timeLeft + 2) : 0)} className="p-2 bg-gray-800 rounded flex items-center justify-center aspect-square">{item === 'TOILET' ? <div className="text-white font-bold text-xs">WC</div> : <div className="w-4 h-4 rounded-full bg-gray-500"></div>}</button>)}</div>
+      <p className="text-gray-400 text-xs mb-2">{hidden ? "WHERE WAS IT?" : "MEMORIZE!"}</p>
+      <div className="grid grid-cols-6 gap-2 mt-4">
+        {grid.map((item, i) => (
+            <button 
+                key={i} 
+                onClick={() => handleClick(i)} 
+                className="p-2 bg-gray-800 rounded flex items-center justify-center aspect-square active:bg-gray-700"
+            >
+                {!hidden && item === 'TOILET' ? <div className="text-white font-bold text-xs">WC</div> : <div className="w-4 h-4 rounded-full bg-gray-500"></div>}
+            </button>
+        ))}
+      </div>
     </div>
   );
 };
@@ -263,11 +422,60 @@ export const UberCode = ({ onFinish }) => {
   const [code] = useState(() => Array(4).fill(0).map(() => getRandomInt(0, 9)).join(''));
   const [input, setInput] = useState("");
   const [keys, setKeys] = useState([0,1,2,3,4,5,6,7,8,9]);
+  const [timeLeft, setTimeLeft] = useState(8);
+
   useEffect(() => setKeys(shuffleArray(keys)), [input]);
-  const handlePress = (n) => { const next = input + n; setInput(next); if (next.length === 4) onFinish(next === code ? 10 : 0); };
+  
+  useEffect(() => {
+      const t = setInterval(() => {
+          setTimeLeft(prev => {
+              if (prev <= 0) {
+                  clearInterval(t);
+                  onFinish(0);
+                  return 0;
+              }
+              return prev - 1;
+          });
+      }, 1000);
+      return () => clearInterval(t);
+  }, [onFinish]);
+
+  const handlePress = (n) => { 
+      const next = input + n; 
+      setInput(next); 
+      if (next.length === 4) {
+          // Calculate Score based on correctness + time
+          let correctDigits = 0;
+          for (let i = 0; i < 4; i++) {
+              if (next[i] === code[i]) correctDigits++;
+          }
+
+          // Base score: 2 points per correct digit (max 8)
+          let score = correctDigits * 2;
+
+          // Time bonus/penalty
+          if (correctDigits === 4) {
+              if (timeLeft > 5) {
+                  score += 2; // Bonus for speed (Total 10)
+              } else if (timeLeft < 4) {
+                  // Penalty for slowness
+                  // e.g. 3.9s -> penalty 1
+                  // 0.1s -> penalty 4
+                  const penalty = Math.ceil(4 - timeLeft);
+                  score = Math.max(0, score - penalty);
+              }
+          }
+
+          onFinish(score);
+      }
+  };
+  
   return (
     <div className="w-full max-w-md p-4 text-center">
-      <h3 className="text-xl font-bold text-purple-400 mb-2">UBER CODE</h3>
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-xl font-bold text-purple-400">UBER CODE</h3>
+        <span className="text-red-500 font-mono font-bold">{timeLeft}s</span>
+      </div>
       <p className="text-gray-400 mb-4">Enter: <span className="text-3xl font-mono text-white font-bold">{code}</span></p>
       <div className="bg-gray-800 p-4 rounded mb-4 h-16 flex items-center justify-center"><span className="text-3xl font-mono text-neon-blue tracking-[1em]">{input.padEnd(4, '_')}</span></div>
       <div className="grid grid-cols-3 gap-3">{keys.map(k => <button key={k} onClick={() => handlePress(k)} className="bg-gray-700 h-16 rounded-lg text-2xl font-bold active:bg-purple-500">{k}</button>)}</div>
@@ -276,10 +484,38 @@ export const UberCode = ({ onFinish }) => {
 };
 
 export const AlphabetSoup = ({ onFinish }) => {
-  const [target, setTarget] = useState('A');
+  const [targetIndex, setTargetIndex] = useState(0);
+  const [sequence, setSequence] = useState([]);
   const [items, setItems] = useState([]);
-  const [timeLeft, setTimeLeft] = useState(20);
+  const [timeLeft, setTimeLeft] = useState(8); // Reduced from 12 to 8
   const reqRef = useRef();
+
+  // Init Sequence
+  useEffect(() => {
+      const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
+      const seq = shuffleArray(alphabet).slice(0, 6); // 6 random letters
+      setSequence(seq);
+      
+      const newItems = [];
+      seq.forEach(char => {
+        let valid = false;
+        let x, y;
+        let attempts = 0;
+        while (!valid && attempts < 100) {
+          x = getRandomInt(10, 80);
+          y = getRandomInt(10, 80);
+          valid = true;
+          for (let item of newItems) {
+            const dist = Math.sqrt(Math.pow(x - item.x, 2) + Math.pow(y - item.y, 2));
+            if (dist < 15) valid = false;
+          }
+          attempts++;
+        }
+        const angle = Math.random() * Math.PI * 2;
+        newItems.push({ char, x, y, vx: Math.cos(angle) * 0.2, vy: Math.sin(angle) * 0.2 });
+      });
+      setItems(newItems);
+  }, []);
 
   // Timer
   useEffect(() => {
@@ -287,39 +523,15 @@ export const AlphabetSoup = ({ onFinish }) => {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(timer);
-          // Time ran out: Score based on progress (0-4)
-          const progress = target.charCodeAt(0) - 'A'.charCodeAt(0);
-          onFinish(progress);
+          // Time ran out: Score based on progress (0-5)
+          onFinish(targetIndex);
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [target, onFinish]);
-
-  useEffect(() => {
-    const newItems = [];
-    const chars = ['A', 'B', 'C', 'D', 'E'];
-    chars.forEach(char => {
-      let valid = false;
-      let x, y;
-      let attempts = 0;
-      while (!valid && attempts < 100) {
-        x = getRandomInt(10, 80);
-        y = getRandomInt(10, 80);
-        valid = true;
-        for (let item of newItems) {
-          const dist = Math.sqrt(Math.pow(x - item.x, 2) + Math.pow(y - item.y, 2));
-          if (dist < 15) valid = false;
-        }
-        attempts++;
-      }
-      const angle = Math.random() * Math.PI * 2;
-      newItems.push({ char, x, y, vx: Math.cos(angle) * 0.2, vy: Math.sin(angle) * 0.2 });
-    });
-    setItems(newItems);
-  }, []);
+  }, [targetIndex, onFinish]);
 
   useEffect(() => {
     const animate = () => {
@@ -338,26 +550,28 @@ export const AlphabetSoup = ({ onFinish }) => {
   }, []);
 
   const handleTap = (char) => {
-    if (char === target) {
-      const next = String.fromCharCode(target.charCodeAt(0) + 1);
-      if (next === 'F') {
+    if (char === sequence[targetIndex]) {
+      const nextIdx = targetIndex + 1;
+      if (nextIdx >= sequence.length) {
         // Win condition: 5 points base + time bonus (0-5)
-        const bonus = Math.ceil(timeLeft / 4);
-        onFinish(5 + bonus);
+        const bonus = Math.ceil(timeLeft / 1.6); // Adjusted bonus calc for 8s
+        onFinish(Math.min(10, 5 + bonus));
       }
-      else setTarget(next);
+      else setTargetIndex(nextIdx);
     } else {
       onFinish(0); // Miss
     }
   };
 
+  if (sequence.length === 0) return null;
+
   return (
     <div className="w-full h-80 relative bg-gray-900 rounded-xl overflow-hidden border border-gray-700">
       <div className="absolute top-2 left-2 right-2 flex justify-between text-gray-400 z-20 pointer-events-none">
-        <span>Find: <span className="text-neon-green font-bold text-xl">{target}</span></span>
+        <span>Find: <span className="text-neon-green font-bold text-xl">{sequence[targetIndex]}</span></span>
         <span className="text-red-500 font-mono">{timeLeft}s</span>
       </div>
-      {items.map((l) => l.char >= target && (
+      {items.map((l) => !sequence.slice(0, targetIndex).includes(l.char) && (
         <button
           key={l.char}
           onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); handleTap(l.char); }}
@@ -374,7 +588,7 @@ export const AlphabetSoup = ({ onFinish }) => {
 export const BigVsSmall = ({ onFinish }) => {
   const [round, setRound] = useState(1);
   const [correctCount, setCorrectCount] = useState(0);
-  const [startTime] = useState(Date.now());
+  const [timeLeft, setTimeLeft] = useState(15);
   const [current, setCurrent] = useState(null);
 
   // Generator
@@ -394,7 +608,18 @@ export const BigVsSmall = ({ onFinish }) => {
 
   useEffect(() => {
     setCurrent(generateRound());
-  }, []);
+    const t = setInterval(() => {
+        setTimeLeft(prev => {
+            if (prev <= 0) {
+                clearInterval(t);
+                onFinish(0);
+                return 0;
+            }
+            return prev - 1;
+        });
+    }, 1000);
+    return () => clearInterval(t);
+  }, [onFinish]);
 
   const handleChoice = (side) => {
     if (!current) return;
@@ -410,25 +635,21 @@ export const BigVsSmall = ({ onFinish }) => {
       setCurrent(generateRound());
     } else {
       // Calculate Score
-      const totalTime = Date.now() - startTime;
-      let finalScore = 0;
-
       // Base logic: Must have high accuracy (at least 8/10)
       if (newCorrect < 8) {
-        // Fail state: Score is low based on accuracy
-        finalScore = Math.max(0, newCorrect - 3); 
+        onFinish(Math.max(0, newCorrect - 3)); 
       } else {
-        // Success state: Score based on speed
-        // < 6s = 10, < 8s = 9, < 10s = 8, else 7
-        if (totalTime < 6000) finalScore = 10;
-        else if (totalTime < 8000) finalScore = 9;
-        else if (totalTime < 10000) finalScore = 8;
-        else finalScore = 7;
+        // Success state: Score based on remaining time
+        // Stricter: > 10s = 10, > 7s = 9, > 5s = 8, else 5
+        let finalScore = 5;
+        if (timeLeft > 10) finalScore = 10;
+        else if (timeLeft > 7) finalScore = 9;
+        else if (timeLeft > 5) finalScore = 8;
 
         // Deduct 1 point per mistake if any (e.g. 9/10 correct)
         finalScore -= (10 - newCorrect);
+        onFinish(Math.max(0, finalScore));
       }
-      onFinish(finalScore);
     }
   };
 
@@ -438,7 +659,10 @@ export const BigVsSmall = ({ onFinish }) => {
     <div className="w-full max-w-md p-4 text-center select-none">
       <div className="flex justify-between items-center mb-8">
         <h3 className="text-2xl font-bold">BIGGER <span className="text-neon-green">NUMBER</span>?</h3>
-        <span className="text-gray-500 font-mono">{round}/10</span>
+        <div className="flex flex-col items-end">
+            <span className="text-gray-500 font-mono text-xs">{round}/10</span>
+            <span className="text-red-500 font-mono font-bold">{timeLeft}s</span>
+        </div>
       </div>
       
       <div className="flex justify-between items-center h-48">
@@ -541,7 +765,7 @@ export const TextYourEx = ({ onFinish }) => {
     const int = setInterval(() => {
       if (timeLeft > 0) { setPos({ top: getRandomInt(10, 80), left: getRandomInt(10, 80) }); setTimeLeft(t => t - 1); }
       else { clearInterval(int); onFinish(0); }
-    }, 800);
+    }, 450);
     return () => clearInterval(int);
   }, [timeLeft, onFinish]);
   return (
@@ -549,7 +773,7 @@ export const TextYourEx = ({ onFinish }) => {
       <div className="text-center mb-8"><h3 className="text-2xl font-bold text-red-500 mb-2">RISKY TEXT</h3><p className="text-gray-400">Don't send it! Hit delete!</p></div>
       <div className="bg-gray-800 p-4 rounded-lg mb-4"><p className="text-white italic">"i miss u so much..."</p></div>
       <div className="absolute inset-0 flex items-center justify-center -z-0 opacity-20"><Send size={200} /></div>
-      <button onMouseDown={(e) => { e.stopPropagation(); onFinish(10); }} onTouchStart={(e) => { e.stopPropagation(); onFinish(10); }} className="absolute bg-green-500 text-black font-bold py-3 px-6 rounded-full shadow-lg z-10 transition-all duration-300" style={{ top: `${pos.top}%`, left: `${pos.left}%` }}>DELETE ({timeLeft})</button>
+      <button onMouseDown={(e) => { e.stopPropagation(); onFinish(10); }} onTouchStart={(e) => { e.stopPropagation(); onFinish(10); }} className="absolute bg-green-500 text-black font-bold py-2 px-4 rounded-full shadow-lg z-10 transition-all duration-300" style={{ top: `${pos.top}%`, left: `${pos.left}%` }}>DELETE ({timeLeft})</button>
     </div>
   );
 };
@@ -601,18 +825,28 @@ export const TheLine = ({ onFinish }) => {
 
     // The Path
     ctx.strokeStyle = '#00ffff'; 
-    ctx.lineWidth = 45; 
+    ctx.lineWidth = 25; 
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.beginPath();
     ctx.moveTo(cvs.width / 2, cvs.height - 30);
     
-    const cp1x = getRandomInt(0, cvs.width);
-    const cp1y = cvs.height * 0.75;
-    const cp2x = getRandomInt(0, cvs.width);
-    const cp2y = cvs.height * 0.25;
+    // Make it squigglier with multiple curves
+    const startX = cvs.width / 2;
+    const startY = cvs.height - 30;
+    const endX = cvs.width / 2;
+    const endY = 30;
     
-    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, cvs.width / 2, 30);
+    // More complex path
+    const cp1x = getRandomInt(20, cvs.width - 20);
+    const cp1y = startY - (startY - endY) * 0.25;
+    const cp2x = getRandomInt(20, cvs.width - 20);
+    const cp2y = startY - (startY - endY) * 0.5;
+    const cp3x = getRandomInt(20, cvs.width - 20);
+    const cp3y = startY - (startY - endY) * 0.75;
+    
+    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, cvs.width/2, cvs.height/2);
+    ctx.bezierCurveTo(cp3x, cp3y, endX, endY + 50, endX, endY);
     ctx.stroke();
   }, []);
 
@@ -653,7 +887,7 @@ export const TheLine = ({ onFinish }) => {
         }
         
         // Else drain health
-        healthRef.current -= 2; // Drain speed
+        healthRef.current -= 4; // Drain speed
         setHealth(healthRef.current);
         
         if (healthRef.current <= 0) {
@@ -689,8 +923,9 @@ export const TheLine = ({ onFinish }) => {
 export const ReversePsych = ({ onFinish }) => {
   const [round, setRound] = useState(1);
   const [score, setScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(3.0);
+  const [timeLeft, setTimeLeft] = useState(5.0);
   const [instruction, setInstruction] = useState(Math.random() > 0.5 ? 'LEFT' : 'RIGHT');
+  const [mode, setMode] = useState(Math.random() > 0.5 ? 'NORMAL' : 'OPPOSITE');
 
   // Round Timer
   useEffect(() => {
@@ -699,7 +934,7 @@ export const ReversePsych = ({ onFinish }) => {
         if (prev <= 0.1) {
           // Time ran out for this round
           handleTurn(false); 
-          return 3.0; 
+          return 5.0; 
         }
         return prev - 0.1;
       });
@@ -712,7 +947,7 @@ export const ReversePsych = ({ onFinish }) => {
     let points = 0;
     if (isCorrect) {
         points = 1; 
-        if (timeLeft > 1.5) points += 1; // Speed bonus
+        if (timeLeft > 2.5) points += 1; // Speed bonus
     }
     
     const newScore = score + points;
@@ -721,15 +956,20 @@ export const ReversePsych = ({ onFinish }) => {
     if (round < 5) {
       setRound(r => r + 1);
       setInstruction(Math.random() > 0.5 ? 'LEFT' : 'RIGHT');
-      setTimeLeft(3.0);
+      setMode(Math.random() > 0.5 ? 'NORMAL' : 'OPPOSITE');
+      setTimeLeft(5.0);
     } else {
       onFinish(newScore);
     }
   };
 
   const handleClick = (dir) => {
-    // Instruction: LEFT -> Must click RIGHT (Reverse Psych)
-    const correctDir = instruction === 'LEFT' ? 'RIGHT' : 'LEFT';
+    let correctDir;
+    if (mode === 'NORMAL') {
+        correctDir = instruction;
+    } else {
+        correctDir = instruction === 'LEFT' ? 'RIGHT' : 'LEFT';
+    }
     handleTurn(dir === correctDir);
   };
 
@@ -742,6 +982,7 @@ export const ReversePsych = ({ onFinish }) => {
       </div>
       
       <div className="text-6xl font-black mb-8 flex flex-col items-center">
+        <span className={`text-2xl font-bold mb-2 ${mode === 'NORMAL' ? 'text-green-500' : 'text-red-500'}`}>{mode}</span>
         <span className="text-white">TAP</span>
         <span className="text-neon-pink">{instruction}</span>
       </div>
@@ -761,8 +1002,29 @@ export const ReversePsych = ({ onFinish }) => {
 export const SpinCycle = ({ onFinish }) => {
   const [angle, setAngle] = useState(0);
   const [running, setRunning] = useState(true);
-  useEffect(() => { let int; if (running) int = setInterval(() => setAngle(a => (a + 5) % 360), 20); return () => clearInterval(int); }, [running]);
-  const stop = () => { setRunning(false); const diff = Math.min(angle, 360 - angle); onFinish(diff < 15 ? 10 : diff < 30 ? 5 : 0); };
+  useEffect(() => { let int; if (running) int = setInterval(() => setAngle(a => (a + 8) % 360), 20); return () => clearInterval(int); }, [running]);
+  
+  const stop = () => { 
+      setRunning(false); 
+      const diff = Math.min(angle, 360 - angle); 
+      
+      // Gradient Scoring
+      // Perfect: diff < 10 (Score 10)
+      // Range: diff < 45 (Score scales from 9 down to 1)
+      // Miss: diff >= 45 (Score 0)
+      
+      if (diff < 10) {
+          onFinish(10);
+      } else if (diff < 45) {
+          // Linear score: 45 diff = 0 pts, 10 diff = 9 pts roughly
+          // Formula: 9 * (1 - (diff - 10) / 35)
+          const score = Math.ceil(9 * (1 - (diff - 10) / 35));
+          onFinish(Math.max(1, score));
+      } else {
+          onFinish(0);
+      }
+  };
+
   return (
     <div className="w-full max-w-md p-4 text-center h-96 flex flex-col justify-center overflow-hidden">
       <h3 className="text-2xl font-bold text-white mb-8 z-10">STOP UPRIGHT</h3>
@@ -774,13 +1036,44 @@ export const SpinCycle = ({ onFinish }) => {
 };
 
 export const SurvivalMode = ({ onFinish }) => {
-  const [timeLeft, setTimeLeft] = useState(5);
-  useEffect(() => { const t = setInterval(() => setTimeLeft(p => { if (p <= 1) { clearInterval(t); onFinish(0); return 0; } return p - 1; }), 1000); return () => clearInterval(t); }, []);
+  const [timeLeft, setTimeLeft] = useState(3);
+  const [options, setOptions] = useState([]);
+
+  useEffect(() => {
+    const opts = [
+        { label: "Check Ex's Insta", icon: <Search />, correct: false },
+        { label: "CALL UBER", icon: <Car />, correct: true },
+        { label: "Order Pizza", icon: <Pizza />, correct: false },
+        { label: "Take Selfie", icon: <Smartphone />, correct: false }
+    ];
+    setOptions(shuffleArray(opts));
+
+    const t = setInterval(() => setTimeLeft(p => { 
+        if (p <= 1) { 
+            clearInterval(t); 
+            onFinish(0); 
+            return 0; 
+        } 
+        return p - 1; 
+    }), 1000); 
+    return () => clearInterval(t); 
+  }, [onFinish]);
+
   return (
     <div className="w-full max-w-md p-4 text-center">
       <div className="flex justify-between items-center text-red-500 mb-4 font-mono font-bold border-b border-red-900 pb-2"><span>BATTERY: 1%</span><span>{timeLeft}s</span></div>
       <h3 className="text-xl text-white mb-8 font-bold">PHONE IS DYING. ACTION?</h3>
-      <div className="grid grid-cols-2 gap-4"><button onClick={() => onFinish(0)} className="bg-gray-800 p-6 rounded-xl flex flex-col items-center gap-2"><Search /> Check Ex's Insta</button><button onClick={() => onFinish(10)} className="bg-white text-black p-6 rounded-xl flex flex-col items-center gap-2"><Car /> CALL UBER</button><button onClick={() => onFinish(0)} className="bg-gray-800 p-6 rounded-xl flex flex-col items-center gap-2"><Pizza /> Order Pizza</button><button onClick={() => onFinish(0)} className="bg-gray-800 p-6 rounded-xl flex flex-col items-center gap-2"><Smartphone /> Take Selfie</button></div>
+      <div className="grid grid-cols-2 gap-4">
+        {options.map((opt, i) => (
+            <button 
+                key={i} 
+                onClick={() => onFinish(opt.correct ? 10 : 0)} 
+                className="bg-gray-800 hover:bg-gray-700 p-6 rounded-xl flex flex-col items-center gap-2 transition-colors border border-gray-600"
+            >
+                {opt.icon} <span className="font-bold">{opt.label}</span>
+            </button>
+        ))}
+      </div>
     </div>
   );
 };
@@ -838,7 +1131,13 @@ export const RedLight = ({ onFinish }) => {
   };
 
   return (
-    <div className={`w-full h-80 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-colors duration-200 ${color === 'GREEN' ? 'bg-green-500' : color === 'YELLOW' ? 'bg-yellow-400' : 'bg-red-600'}`} onPointerDown={(e) => { e.preventDefault(); handleTap(); }} style={{ touchAction: 'none' }}>
+    <div 
+        className={`w-full h-80 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-colors duration-200 ${color === 'GREEN' ? 'bg-green-500' : color === 'YELLOW' ? 'bg-yellow-400' : 'bg-red-600'}`} 
+        onPointerDown={(e) => { e.preventDefault(); handleTap(); }} 
+        onClick={(e) => { e.preventDefault(); handleTap(); }}
+        onTouchStart={(e) => { e.preventDefault(); handleTap(); }}
+        style={{ touchAction: 'none' }}
+    >
         <div className="text-white font-black text-4xl mb-4 drop-shadow-md">{color === 'GREEN' ? 'TAP!!!' : color === 'YELLOW' ? 'STEADY...' : 'STOP!'}</div>
         <div className="text-2xl font-mono font-bold text-black bg-white/50 px-4 py-1 rounded">{clicks}/15</div>
     </div>
@@ -846,13 +1145,33 @@ export const RedLight = ({ onFinish }) => {
 };
 
 export const BeerGoggles = ({ onFinish }) => {
-  const [blur, setBlur] = useState(15);
-  const handleSubmit = () => { if (blur === 0) onFinish(10); else if (blur < 3) onFinish(5); else onFinish(0); };
+  const [val, setVal] = useState(10);
+  const [target] = useState(() => getRandomInt(2, 18)); // Random target between 2 and 18
+  
+  const handleSubmit = () => { 
+      const diff = Math.abs(val - target);
+      if (diff < 1) onFinish(10); 
+      else if (diff < 3) onFinish(5); 
+      else onFinish(0); 
+  };
+
+  // Blur amount depends on distance from target
+  const blurAmount = Math.abs(val - target);
+
   return (
     <div className="w-full max-w-md p-4 text-center">
       <h3 className="text-2xl font-bold text-neon-blue mb-4">FIX YOUR VISION</h3>
-      <div className="bg-white text-black p-6 rounded-xl mb-8"><p className="font-serif text-2xl font-bold" style={{ filter: `blur(${blur}px)` }}>Am I drunk or is this text blurry?</p></div>
-      <input type="range" min="0" max="20" step="0.5" value={blur} onChange={(e) => setBlur(Number(e.target.value))} className="w-full h-12 accent-neon-blue cursor-pointer mb-8" />
+      <div className="bg-white text-black p-6 rounded-xl mb-8 h-32 flex items-center justify-center">
+          <p className="font-serif text-2xl font-bold transition-all duration-75" style={{ filter: `blur(${blurAmount}px)` }}>
+            Can you read this clearly?
+          </p>
+      </div>
+      <input 
+        type="range" min="0" max="20" step="0.1" 
+        value={val} 
+        onChange={(e) => setVal(Number(e.target.value))} 
+        className="w-full h-12 accent-neon-blue cursor-pointer mb-8" 
+      />
       <button onClick={handleSubmit} className="bg-neon-blue text-black font-bold py-3 px-8 rounded-full text-xl">I CAN SEE!</button>
     </div>
   );
@@ -879,35 +1198,36 @@ export const PerfectPour = ({ onFinish }) => {
                     onFinish(0); // Overflow
                     return 100; 
                 } 
-                return f + 0.8; // Slower fill
+                return f + 1.5; // Faster step
             }); 
-        }, 10); 
+        }, 20); // Slower interval (20ms) for smoother render
     }
     return () => clearInterval(int); 
   }, [pouring, done]);
 
-  const start = () => setPouring(true); 
-  
-  const stop = () => { 
-      setPouring(false); 
-      setDone(true); 
-      
-      const diff = Math.abs(fill - target);
-      
-      // Gradient Scoring
-      // Perfect: diff <= 1 (Score 10)
-      // Range: diff <= 15 (Score scales from 9 down to 1)
-      // Miss: diff > 15 (Score 0)
-      
-      if (diff <= 1) {
-          onFinish(10);
-      } else if (diff <= 15) {
-          // Linear score: 15 diff = 0 pts, 1 diff = 9 pts roughly
-          const score = Math.ceil(9 * (1 - (diff / 15)));
-          onFinish(Math.max(1, score));
-      } else {
-          onFinish(0);
-      }
+  const handleStart = (e) => {
+    if (e.cancelable) e.preventDefault(); // Prevent scrolling/selection
+    if (done) return;
+    setPouring(true);
+  };
+
+  const handleStop = (e) => {
+    if (e.cancelable) e.preventDefault();
+    if (!pouring || done) return;
+    setPouring(false);
+    setDone(true);
+    
+    const diff = Math.abs(fill - target);
+    
+    // Gradient Scoring
+    if (diff <= 1) {
+        onFinish(10);
+    } else if (diff <= 15) {
+        const score = Math.ceil(9 * (1 - (diff / 15)));
+        onFinish(Math.max(1, score));
+    } else {
+        onFinish(0);
+    }
   };
 
   return (
@@ -921,32 +1241,23 @@ export const PerfectPour = ({ onFinish }) => {
                 style={{ bottom: `${target}%` }}
             ></div>
             
-            {/* Liquid */}
+            {/* Liquid - Removed transition for instant updates */}
             <div 
-                className="absolute bottom-0 w-full bg-yellow-500 transition-all duration-75" 
+                className="absolute bottom-0 w-full bg-yellow-500" 
                 style={{ height: `${fill}%` }}
             ></div>
         </div>
       </div>
       <button 
-        onPointerDown={(e) => { 
-          e.preventDefault();
-          e.currentTarget.setPointerCapture(e.pointerId);
-          start(); 
-        }} 
-        onPointerUp={(e) => { 
-          e.preventDefault();
-          e.currentTarget.releasePointerCapture(e.pointerId);
-          stop(); 
-        }} 
-        onPointerCancel={(e) => {
-          e.preventDefault();
-          e.currentTarget.releasePointerCapture(e.pointerId);
-          stop();
-        }}
+        onMouseDown={handleStart}
+        onTouchStart={handleStart}
+        onMouseUp={handleStop}
+        onMouseLeave={handleStop}
+        onTouchEnd={handleStop}
+        onContextMenu={(e) => e.preventDefault()}
         disabled={done} 
-        className="w-full bg-yellow-500 text-black font-bold py-4 rounded-xl active:scale-95 disabled:opacity-50"
-        style={{ touchAction: 'none' }}
+        className="w-full bg-yellow-500 text-black font-bold py-4 rounded-xl active:scale-95 disabled:opacity-50 touch-none select-none"
+        style={{ touchAction: 'none', userSelect: 'none', WebkitUserSelect: 'none' }}
       >
         {done ? (fill >= 100 ? "SPILLED!" : "DONE") : "HOLD TO POUR"}
       </button>
@@ -955,21 +1266,56 @@ export const PerfectPour = ({ onFinish }) => {
 };
 
 export const Hydrate = ({ onFinish }) => {
-  const [grid, setGrid] = useState([]); const [timeLeft, setTimeLeft] = useState(5.0);
-  useEffect(() => { const items = Array(24).fill('ALCOHOL'); items[getRandomInt(0, 23)] = 'WATER'; setGrid(items); }, []);
-  useEffect(() => { if (timeLeft > 0) { const t = setTimeout(() => setTimeLeft(p => Math.max(0, p - 0.1)), 100); return () => clearTimeout(t); } else onFinish(0); }, [timeLeft, onFinish]);
+  const [grid, setGrid] = useState([]); 
+  const [timeLeft, setTimeLeft] = useState(4.0);
+  
+  useEffect(() => { 
+      const size = 36; 
+      const items = Array(size).fill('ALCOHOL'); 
+      items[getRandomInt(0, size - 1)] = 'WATER'; 
+      setGrid(items); 
+  }, []);
+
+  useEffect(() => { 
+      if (timeLeft > 0) { 
+          const t = setTimeout(() => setTimeLeft(p => Math.max(0, p - 0.1)), 100); 
+          return () => clearTimeout(t); 
+      } else onFinish(0); 
+  }, [timeLeft, onFinish]);
+
+  const handleClick = (isWater) => {
+      if (isWater) {
+          // Score based on remaining time. Max 10.
+          // 4s total. If > 3s left -> 10. If > 2s -> 8. If > 1s -> 6. Else 4.
+          let score = 4;
+          if (timeLeft > 3.0) score = 10;
+          else if (timeLeft > 2.0) score = 8;
+          else if (timeLeft > 1.0) score = 6;
+          onFinish(score);
+      } else {
+          // Penalty: Reduce time by 1s
+          setTimeLeft(prev => Math.max(0, prev - 1.0));
+      }
+  };
+
   return (
     <div className="w-full max-w-md p-4 text-center">
       <h3 className="text-2xl font-bold text-blue-400 mb-2">FIND WATER</h3>
       <span className="text-red-500 font-mono text-xl mb-4 block">{timeLeft.toFixed(1)}s</span>
-      <div className="grid grid-cols-5 gap-3">{grid.map((item, i) => <button key={i} onClick={() => onFinish(item === 'WATER' ? 10 : 0)} className="text-2xl p-2 bg-gray-800 rounded hover:bg-gray-700">{item === 'WATER' ? <Droplet className="text-blue-400 mx-auto" /> : (Math.random() > 0.5 ? <Beer className="text-yellow-500 mx-auto" /> : <Wine className="text-purple-500 mx-auto" />)}</button>)}</div>
+      <div className="grid grid-cols-6 gap-2">
+        {grid.map((item, i) => (
+            <button key={i} onClick={() => handleClick(item === 'WATER')} className="text-2xl p-2 bg-gray-800 rounded hover:bg-gray-700 flex items-center justify-center aspect-square">
+                {item === 'WATER' ? <Droplet className="text-white w-6 h-6" /> : (Math.random() > 0.5 ? <Beer className="text-white w-6 h-6" /> : <Wine className="text-white w-6 h-6" />)}
+            </button>
+        ))}
+      </div>
     </div>
   );
 };
 
 export const CatchUber = ({ onFinish }) => {
   const [playerX, setPlayerX] = useState(50);
-  const [uber, setUber] = useState({ x: getRandomInt(10, 90), y: 0 });
+  const [items, setItems] = useState([]);
   const [running, setRunning] = useState(true);
   const playerRef = useRef(50);
 
@@ -979,39 +1325,59 @@ export const CatchUber = ({ onFinish }) => {
       let int;
       if (running) {
           int = setInterval(() => {
-              setUber(u => {
-                  // Speed adjusted
-                  const nextY = u.y + 1.2; 
-                  if (nextY >= 90) {
-                      if (Math.abs(u.x - playerRef.current) < 15) {
-                          setRunning(false);
-                          onFinish(10);
-                          return u;
-                      } else {
-                          setRunning(false);
-                          onFinish(0);
-                          return u;
+              // Spawn new items randomly (Increased chance: 5% per frame)
+              if (Math.random() < 0.05) {
+                  setItems(prev => [...prev, { 
+                      id: Date.now(), 
+                      x: getRandomInt(10, 90), 
+                      y: -10, 
+                      type: Math.random() > 0.3 ? 'FAKE' : 'UBER' // 30% chance for Uber
+                  }]);
+              }
+
+              setItems(prev => {
+                  const nextItems = [];
+                  let finished = false;
+                  
+                  prev.forEach(item => {
+                      const nextY = item.y + 2.5; // Increased Speed (was 1.5)
+                      
+                      // Check collision
+                      if (nextY >= 85 && nextY <= 95 && Math.abs(item.x - playerRef.current) < 10) {
+                          if (item.type === 'UBER') {
+                              setRunning(false);
+                              onFinish(10);
+                              finished = true;
+                          } else {
+                              // Hit fake car -> Game Over
+                              setRunning(false);
+                              onFinish(0);
+                              finished = true;
+                          }
+                      } else if (nextY < 100) {
+                          nextItems.push({ ...item, y: nextY });
                       }
-                  }
-                  return { ...u, y: nextY };
+                  });
+                  
+                  if (finished) return [];
+                  return nextItems;
               });
           }, 20);
       }
       return () => clearInterval(int);
-  }, [running]);
+  }, [running, onFinish]);
 
   return (
     <div className="w-full max-w-md p-4 text-center h-full flex flex-col justify-between">
-      <h3 className="text-2xl font-bold text-white mb-4">CATCH THE RIDE</h3>
+      <h3 className="text-2xl font-bold text-white mb-4">CATCH THE <span className="text-yellow-400">TAXI</span></h3>
       
-      {/* Game Area - Fixed Height ensuring visibility */}
       <div className="w-full h-80 relative bg-gray-800 rounded-xl border border-gray-600 overflow-hidden mb-4">
-         {/* Uber - EMOJI for visibility */}
-         <div className="absolute text-4xl" style={{ top: `${uber.y}%`, left: `${uber.x}%`, transform: 'translate(-50%, 0)' }}>
-            🚖
-         </div>
+         {items.map(item => (
+             <div key={item.id} className="absolute text-4xl" style={{ top: `${item.y}%`, left: `${item.x}%`, transform: 'translate(-50%, 0)' }}>
+                {item.type === 'UBER' ? '🚖' : '🚔'}
+             </div>
+         ))}
          
-         {/* Player - EMOJI for visibility */}
          <div className="absolute bottom-0 text-4xl" style={{ left: `${playerX}%`, transform: 'translate(-50%, 0)' }}>
             🧍
          </div>
