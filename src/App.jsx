@@ -55,7 +55,7 @@ const App = () => {
   })();
 
   return (
-    <div className="min-h-screen bg-black font-sans text-white flex flex-col items-center justify-center p-4 overflow-hidden relative selection:bg-neon-pink selection:text-white">
+    <div className="min-h-screen bg-black font-sans text-white flex flex-col items-center justify-center p-4 pb-24 overflow-hidden relative selection:bg-neon-pink selection:text-white">
       <div className="absolute inset-0 opacity-20 pointer-events-none"><div className="absolute -top-10 -left-10 w-96 h-96 bg-neon-purple blur-[128px] rounded-full animate-pulse"></div><div className="absolute -bottom-10 -right-10 w-96 h-96 bg-neon-blue blur-[128px] rounded-full animate-pulse delay-1000"></div></div>
       
       {view === 'HOME' && (
@@ -91,7 +91,32 @@ const App = () => {
           <button onClick={() => setView('HOME')} className="mt-8 flex items-center justify-center gap-2 mx-auto text-gray-400 hover:text-white transition-colors"><RotateCcw size={20} /><span>Test Again</span></button>
         </div>
       )}
-      <div className="absolute bottom-4 text-gray-600 text-xs font-mono">BUZZCHECK v1.0 // DON'T DRINK AND DRIVE</div>
+      
+      <div className="absolute bottom-20 text-gray-600 text-xs font-mono">BUZZCHECK v1.0 // DON'T DRINK AND DRIVE</div>
+
+      {/* 
+        =============================================================================
+        ADSENSE CONFIGURATION
+        =============================================================================
+        1. Create a "Display Ad" unit in your Google AdSense dashboard.
+        2. Copy the 'data-ad-client' (Your Publisher ID) and 'data-ad-slot' (Ad Unit ID).
+        3. Paste the <ins> tag code inside the div below.
+        4. Ensure you also add the AdSense script tag to your index.html <head> section.
+           (See index.html for instructions)
+      */}
+      <div className="fixed bottom-0 left-0 right-0 h-[60px] md:h-[90px] bg-gray-900/90 border-t border-gray-800 flex justify-center items-center z-50 backdrop-blur-sm">
+          {/* --- PASTE YOUR ADSENSE CODE HERE --- */}
+          <p className="text-gray-600 text-xs font-mono">AD SPACE (REPLACE WITH ADSENSE CODE)</p>
+          {/* 
+            Example Code:
+            <ins className="adsbygoogle"
+                 style={{ display: 'block', width: '100%', height: '100%' }}
+                 data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+                 data-ad-slot="XXXXXXXXXX"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+          */}
+      </div>
     </div>
   );
 };
