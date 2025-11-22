@@ -98,7 +98,28 @@ const App = () => {
 
       {view === 'RESULT' && (
         <div className="z-10 text-center max-w-md w-full animate-scale-in">
-          <div className="bg-gray-900 p-8 rounded-2xl border border-gray-700 shadow-2xl">{result.icon}<h2 className="text-gray-400 uppercase tracking-widest text-sm mb-2">Score</h2><div className="text-8xl font-black mb-2 flex justify-center items-baseline"><span className={result.color}>{finalScore}</span><span className="text-4xl text-gray-600">/10</span></div><div className="h-px w-full bg-gray-700 my-6"></div><h3 className="text-xl font-bold text-white mb-1">Est. Intake:</h3><p className={`text-2xl font-bold mb-6 ${result.color}`}>{result.d}</p><div className="bg-black p-4 rounded-lg border border-gray-700 rotate-1"><p className="text-lg italic text-white">"{result.c}"</p></div></div>
+          <div className="bg-gray-900 p-8 rounded-2xl border border-gray-700 shadow-2xl">
+            {result.icon}
+            <h2 className="text-gray-400 uppercase tracking-widest text-sm mb-2">Score</h2>
+            <div className="text-8xl font-black mb-2 flex justify-center items-baseline">
+              <span className={result.color}>{finalScore}</span>
+              <span className="text-4xl text-gray-600">/10</span>
+            </div>
+            <div className="h-px w-full bg-gray-700 my-6"></div>
+            <h3 className="text-xl font-bold text-white mb-1">Est. Intake:</h3>
+            <p className={`text-2xl font-bold mb-6 ${result.color}`}>{result.d}</p>
+            <div className="bg-black p-4 rounded-lg border border-gray-700 rotate-1">
+              <p className="text-lg italic text-white">"{result.c}"</p>
+            </div>
+            
+            {/* Small Disclaimer */}
+            <div className="mt-6 pt-4 border-t border-gray-800">
+              <p className="text-[10px] text-gray-500 leading-relaxed">
+                ⚠️ ENTERTAINMENT ONLY. This score does not prove you are sober. 
+                <span className="block mt-1 text-gray-600">Never use this app to decide if you can drive.</span>
+              </p>
+            </div>
+          </div>
           <button onClick={() => setView('HOME')} className="mt-8 flex items-center justify-center gap-2 mx-auto text-gray-400 hover:text-white transition-colors"><RotateCcw size={20} /><span>Test Again</span></button>
         </div>
       )}
