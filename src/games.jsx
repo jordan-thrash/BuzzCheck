@@ -100,7 +100,13 @@ export const WheresMyKeys = ({ onFinish }) => {
     const newUserSeq = [...userSequence, index]; setUserSequence(newUserSeq);
     const currentIndex = newUserSeq.length - 1;
     if (newUserSeq[currentIndex] !== sequence[currentIndex]) { onFinish(Math.min(10, (round - 1) * 3)); return; }
-    if (newUserSeq.length === sequence.length) { if (round === 4) { onFinish(10); } else { setTimeout(() => startRound(round + 1, sequence), 800); } }
+    if (newUserSeq.length === sequence.length) { 
+      if (round === 4) { onFinish(10); } 
+      else { 
+        setPlaying(true); // Block input during transition
+        setTimeout(() => startRound(round + 1, sequence), 800); 
+      } 
+    }
   };
 
   return (
