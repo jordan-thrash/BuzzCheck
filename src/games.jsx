@@ -68,7 +68,7 @@ export const DrunkText = ({ onFinish }) => {
 
 export const WheresMyKeys = ({ onFinish }) => {
   const [sequence, setSequence] = useState([]);
-  const [userSequence, setUserSequence] = useState([]);
+  const userSequence = useRef([]);
   const [playing, setPlaying] = useState(false);
   const [round, setRound] = useState(1);
   const [flashIndex, setFlashIndex] = useState(null);
@@ -86,7 +86,7 @@ export const WheresMyKeys = ({ onFinish }) => {
 
   const playSequence = (seq) => {
     setPlaying(true);
-    setUserSequence([]);
+    userSequence.current = [];
     let i = 0;
     const interval = setInterval(() => {
       if (i >= seq.length) { clearInterval(interval); setFlashIndex(null); setPlaying(false); return; }
@@ -97,7 +97,10 @@ export const WheresMyKeys = ({ onFinish }) => {
   const handleTap = (index) => {
     if (playing) return;
     setUserFlashIndex(index); setTimeout(() => setUserFlashIndex(null), 150);
-    const newUserSeq = [...userSequence, index]; setUserSequence(newUserSeq);
+    
+    userSequence.current = [...userSequence.current, index];
+    const newUserSeq = userSequence.current;
+    
     const currentIndex = newUserSeq.length - 1;
     if (newUserSeq[currentIndex] !== sequence[currentIndex]) { onFinish(Math.min(10, (round - 1) * 3)); return; }
     if (newUserSeq.length === sequence.length) { 
@@ -114,7 +117,11 @@ export const WheresMyKeys = ({ onFinish }) => {
       <h3 className="text-2xl font-bold text-neon-purple mb-4">WHERE'S MY KEYS?</h3>
       <div className="grid grid-cols-3 gap-3 mx-auto max-w-[300px]">
         {[...Array(9)].map((_, i) => (
-          <button key={i} onMouseDown={() => handleTap(i)} onTouchStart={() => handleTap(i)} className={`aspect-square rounded-xl border-2 transition-all duration-100 ${(flashIndex === i || userFlashIndex === i) ? 'bg-neon-purple border-white shadow-[0_0_15px_#d946ef] scale-95' : 'bg-gray-800 border-gray-600'}`}>
+          <button 
+            key={i} 
+            onPointerDown={(e) => { e.preventDefault(); handleTap(i); }}
+            className={`aspect-square rounded-xl border-2 transition-all duration-100 ${(flashIndex === i || userFlashIndex === i) ? 'bg-neon-purple border-white shadow-[0_0_15px_#d946ef] scale-95' : 'bg-gray-800 border-gray-600'}`}
+          >
             {(flashIndex === i || userFlashIndex === i) && <Car className="mx-auto text-white" />}
           </button>
         ))}
