@@ -1,0 +1,99 @@
+import React, { useState, useRef } from 'react';
+import { 
+  Beer, Brain, Pizza, Ghost, Car, PartyPopper, Skull, Unlock, RotateCcw 
+} from 'lucide-react';
+import { getRandomInt } from './utils/helpers';
+import * as Games from './games';
+
+const App = () => {
+  const [view, setView] = useState('HOME'); // HOME, GAME, RESULT, ADMIN
+  const [currentGame, setCurrentGame] = useState(null);
+  const [finalScore, setFinalScore] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [isUnlocking, setIsUnlocking] = useState(false);
+  const secretTimerRef = useRef(null);
+  const animTimerRef = useRef(null);
+
+  const GAMES = [
+    { id: 'balance', name: 'Hold My Beer', color: 'text-neon-pink', Component: Games.HoldMyBeer },
+    { id: 'typing', name: 'Drunk Text', color: 'text-neon-blue', Component: Games.DrunkText },
+    { id: 'memory', name: 'Where\'s Keys?', color: 'text-neon-purple', Component: Games.WheresMyKeys },
+    { id: 'reflex', name: 'Taco Run', color: 'text-neon-green', Component: Games.TacoRun },
+    { id: 'math', name: 'Tip Math', color: 'text-yellow-400', Component: Games.TipCalculator },
+    { id: 'stroop', name: 'Vibe Check', color: 'text-red-500', Component: Games.VibeCheck },
+    { id: 'pizza', name: 'Pizza King', color: 'text-orange-500', Component: Games.PizzaKing },
+    { id: 'pong', name: 'Shot Pong', color: 'text-green-400', Component: Games.ShotPong },
+    { id: 'toilet', name: 'Toilet Rush', color: 'text-blue-300', Component: Games.ToiletRush },
+    { id: 'uber', name: 'Uber Code', color: 'text-purple-400', Component: Games.UberCode },
+    { id: 'alphabet', name: 'Alphabet Soup', color: 'text-yellow-200', Component: Games.AlphabetSoup },
+    { id: 'bigsmall', name: 'Big vs Small', color: 'text-white', Component: Games.BigVsSmall },
+    { id: 'bouncer', name: 'The Bouncer', color: 'text-blue-500', Component: Games.TheBouncer },
+    { id: 'ghost', name: 'Ghost Toast', color: 'text-pink-500', Component: Games.GhostToast },
+    { id: 'clock', name: 'Internal Clock', color: 'text-gray-300', Component: Games.InternalClock },
+    { id: 'extext', name: 'Text Your Ex', color: 'text-red-600', Component: Games.TextYourEx },
+    { id: 'line', name: 'The Line', color: 'text-neon-blue', Component: Games.TheLine },
+    { id: 'reverse', name: 'Opposite Day', color: 'text-purple-400', Component: Games.ReversePsych },
+    { id: 'spin', name: 'Spin Cycle', color: 'text-green-400', Component: Games.SpinCycle },
+    { id: 'survival', name: 'Survival Mode', color: 'text-red-500', Component: Games.SurvivalMode },
+    { id: 'redlight', name: 'Red Light', color: 'text-yellow-400', Component: Games.RedLight },
+    { id: 'beer', name: 'Beer Goggles', color: 'text-blue-300', Component: Games.BeerGoggles },
+    { id: 'pour', name: 'Perfect Pour', color: 'text-yellow-500', Component: Games.PerfectPour },
+    { id: 'hydrate', name: 'Hydrate', color: 'text-blue-500', Component: Games.Hydrate },
+    { id: 'catch', name: 'Catch Uber', color: 'text-white', Component: Games.CatchUber },
+  ];
+
+  const startSecretUnlock = () => { animTimerRef.current = setTimeout(() => setIsUnlocking(true), 1000); secretTimerRef.current = setTimeout(() => { setView('ADMIN'); setIsUnlocking(false); }, 3000); };
+  const cancelSecretUnlock = () => { clearTimeout(secretTimerRef.current); clearTimeout(animTimerRef.current); setIsUnlocking(false); };
+  const startGame = (g = null) => { setLoading(true); setTimeout(() => { setCurrentGame(g || GAMES[getRandomInt(0, GAMES.length - 1)]); setView('GAME'); setLoading(false); }, 1000); };
+  const handleGameFinish = (s) => { setFinalScore(s); setView('RESULT'); };
+  
+  const result = (() => {
+    if (finalScore >= 9) return { d: "0 (Designated Driver)", c: "Boringly sober. You're driving.", color: "text-green-500", icon: <Car className="w-16 h-16 mx-auto mb-4 text-green-500" /> };
+    if (finalScore >= 7) return { d: "1-2 Drinks", c: "Slight buzz. Don't text her.", color: "text-yellow-400", icon: <PartyPopper className="w-16 h-16 mx-auto mb-4 text-yellow-400" /> };
+    if (finalScore >= 4) return { d: "3-5 Drinks", c: "Sloppy. Drink water immediately.", color: "text-orange-500", icon: <Beer className="w-16 h-16 mx-auto mb-4 text-orange-500" /> };
+    return { d: "WASTED", c: "You are talking to a lamp.", color: "text-red-600", icon: <Skull className="w-16 h-16 mx-auto mb-4 text-red-600 animate-pulse" /> };
+  })();
+
+  return (
+    <div className="min-h-screen bg-black font-sans text-white flex flex-col items-center justify-center p-4 overflow-hidden relative selection:bg-neon-pink selection:text-white">
+      <div className="absolute inset-0 opacity-20 pointer-events-none"><div className="absolute -top-10 -left-10 w-96 h-96 bg-neon-purple blur-[128px] rounded-full animate-pulse"></div><div className="absolute -bottom-10 -right-10 w-96 h-96 bg-neon-blue blur-[128px] rounded-full animate-pulse delay-1000"></div></div>
+      
+      {view === 'HOME' && (
+        <div className="z-10 text-center max-w-md w-full animate-fade-in">
+          <div className={`cursor-pointer select-none transition-transform ${isUnlocking ? 'animate-shake text-red-500' : ''}`} onMouseDown={startSecretUnlock} onTouchStart={startSecretUnlock} onMouseUp={cancelSecretUnlock} onTouchEnd={cancelSecretUnlock} onMouseLeave={cancelSecretUnlock}>
+             <h1 className="text-6xl font-black tracking-tighter italic mb-2"><span className={isUnlocking?"text-red-500":"text-neon-pink"}>BUZZ</span><span className={isUnlocking?"text-red-500":"text-neon-green"}>CHECK</span></h1>
+             {isUnlocking && <p className="text-red-500 font-mono text-xs animate-pulse tracking-widest">SYSTEM FAILURE...</p>}
+          </div>
+          <div className="flex justify-center gap-2 mb-12"><span className="px-2 py-1 bg-gray-800 rounded text-xs text-gray-400">v1.0</span></div>
+          {loading ? <div className="flex flex-col items-center h-40"><div className="w-16 h-16 border-4 border-t-neon-pink border-r-neon-blue border-b-neon-green border-l-yellow-400 rounded-full animate-spin mb-4"></div><p className="font-mono animate-pulse">Calibrating...</p></div> : 
+          <button onClick={() => startGame()} className="w-full bg-white text-black text-2xl font-black py-6 rounded-xl hover:scale-105 active:scale-95 transition-transform shadow-[0_0_30px_rgba(255,255,255,0.3)] border-4 border-transparent hover:border-neon-pink">CHECK MY STATUS</button>}
+          <div className="mt-12 grid grid-cols-5 gap-4 opacity-50 text-gray-600"><Beer className="mx-auto"/><Brain className="mx-auto"/><Pizza className="mx-auto"/><Ghost className="mx-auto"/><Car className="mx-auto"/></div>
+        </div>
+      )}
+
+      {view === 'ADMIN' && (
+        <div className="z-20 w-full max-w-md h-full flex flex-col bg-black/90 backdrop-blur-sm absolute inset-0 p-4 overflow-y-auto">
+            <div className="flex justify-between items-center mb-6 sticky top-0 bg-black py-4 border-b border-gray-800 z-30"><h2 className="text-2xl font-black text-gray-400 flex items-center gap-2"><Unlock size={24} /> ADMIN</h2><button onClick={() => setView('HOME')} className="bg-gray-800 p-2 rounded">Close</button></div>
+            <div className="grid grid-cols-1 gap-3 pb-20">{GAMES.map((g, i) => <button key={g.id} onClick={() => startGame(g)} className="flex justify-between p-4 bg-gray-900 rounded-lg border border-gray-700 hover:border-neon-green"><span className="text-gray-500 w-8">{i+1}.</span><span className={`font-bold flex-1 text-left ${g.color}`}>{g.name}</span><div className="bg-gray-800 p-2 rounded ml-4 text-xs">PLAY</div></button>)}</div>
+        </div>
+      )}
+
+      {view === 'GAME' && currentGame && (
+        <div className="z-10 w-full flex flex-col items-center animate-fade-in">
+            <div className="w-full max-w-md flex justify-between items-center mb-8 p-2 border-b border-gray-800"><span className="font-bold text-gray-500">CHALLENGE</span><span className={`font-black uppercase tracking-wider ${currentGame.color}`}>{currentGame.name}</span></div>
+            <currentGame.Component onFinish={handleGameFinish} />
+        </div>
+      )}
+
+      {view === 'RESULT' && (
+        <div className="z-10 text-center max-w-md w-full animate-scale-in">
+          <div className="bg-gray-900 p-8 rounded-2xl border border-gray-700 shadow-2xl">{result.icon}<h2 className="text-gray-400 uppercase tracking-widest text-sm mb-2">Score</h2><div className="text-8xl font-black mb-2 flex justify-center items-baseline"><span className={result.color}>{finalScore}</span><span className="text-4xl text-gray-600">/10</span></div><div className="h-px w-full bg-gray-700 my-6"></div><h3 className="text-xl font-bold text-white mb-1">Est. Intake:</h3><p className={`text-2xl font-bold mb-6 ${result.color}`}>{result.d}</p><div className="bg-black p-4 rounded-lg border border-gray-700 rotate-1"><p className="text-lg italic text-white">"{result.c}"</p></div></div>
+          <button onClick={() => setView('HOME')} className="mt-8 flex items-center justify-center gap-2 mx-auto text-gray-400 hover:text-white transition-colors"><RotateCcw size={20} /><span>Test Again</span></button>
+        </div>
+      )}
+      <div className="absolute bottom-4 text-gray-600 text-xs font-mono">BUZZCHECK v1.0 // DON'T DRINK AND DRIVE</div>
+    </div>
+  );
+};
+
+export default App;
