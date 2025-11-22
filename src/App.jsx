@@ -65,7 +65,7 @@ const App = () => {
   })();
 
   return (
-    <div className="min-h-screen bg-black font-sans text-white flex flex-col items-center justify-center p-4 pb-24 overflow-hidden relative selection:bg-neon-pink selection:text-white">
+    <div className="min-h-screen bg-black font-sans text-white flex flex-col items-center justify-center p-4 pb-32 overflow-hidden relative selection:bg-neon-pink selection:text-white">
       <div className="absolute inset-0 opacity-20 pointer-events-none"><div className="absolute -top-10 -left-10 w-96 h-96 bg-neon-purple blur-[128px] rounded-full animate-pulse"></div><div className="absolute -bottom-10 -right-10 w-96 h-96 bg-neon-blue blur-[128px] rounded-full animate-pulse delay-1000"></div></div>
       
       {view === 'HOME' && (
@@ -156,7 +156,7 @@ const App = () => {
         </div>
       )}
       
-      <div className="absolute bottom-20 text-gray-600 text-xs font-mono">BUZZCHECK v1.0 // DON'T DRINK AND DRIVE</div>
+      <div className="absolute bottom-28 text-gray-600 text-xs font-mono">BUZZCHECK v1.0 // DON'T DRINK AND DRIVE</div>
 
       {/* 
         =============================================================================
