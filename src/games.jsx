@@ -929,9 +929,21 @@ export const PerfectPour = ({ onFinish }) => {
         </div>
       </div>
       <button 
-        onPointerDown={(e) => { e.preventDefault(); start(); }} 
-        onPointerUp={(e) => { e.preventDefault(); stop(); }} 
-        onPointerLeave={(e) => { e.preventDefault(); stop(); }}
+        onPointerDown={(e) => { 
+          e.preventDefault();
+          e.currentTarget.setPointerCapture(e.pointerId);
+          start(); 
+        }} 
+        onPointerUp={(e) => { 
+          e.preventDefault();
+          e.currentTarget.releasePointerCapture(e.pointerId);
+          stop(); 
+        }} 
+        onPointerCancel={(e) => {
+          e.preventDefault();
+          e.currentTarget.releasePointerCapture(e.pointerId);
+          stop();
+        }}
         disabled={done} 
         className="w-full bg-yellow-500 text-black font-bold py-4 rounded-xl active:scale-95 disabled:opacity-50"
         style={{ touchAction: 'none' }}
