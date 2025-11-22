@@ -149,12 +149,17 @@ const App = () => {
       */}
       <div className="fixed bottom-0 left-0 right-0 h-[90px] bg-gray-900/90 border-t border-gray-800 flex justify-center items-center z-50 backdrop-blur-sm overflow-hidden">
           {/* BuzzCheck Bottom Banner 1 */}
-          <ins className="adsbygoogle"
-               style={{ display: 'block', width: '100%', height: '100%' }}
-               data-ad-client="ca-pub-8187636241583182"
-               data-ad-slot="3512892683"
-               data-ad-format="horizontal"
-               data-full-width-responsive="true"></ins>
+          <ins 
+            className="adsbygoogle"
+            style={{ 
+              display: 'inline-block', 
+              width: '100%', 
+              height: '90px', 
+              maxHeight: '90px'
+            }}
+            data-ad-client="ca-pub-8187636241583182"
+            data-ad-slot="3512892683"
+          />
       </div>
     </div>
   );
