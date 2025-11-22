@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Beer, Brain, Pizza, Ghost, Car, PartyPopper, Skull, Unlock, RotateCcw 
 } from 'lucide-react';
@@ -13,6 +13,15 @@ const App = () => {
   const [isUnlocking, setIsUnlocking] = useState(false);
   const secretTimerRef = useRef(null);
   const animTimerRef = useRef(null);
+
+  useEffect(() => {
+    try {
+      // Initialize AdSense
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    } catch (e) {
+      console.error("AdSense error", e);
+    }
+  }, []);
 
   const GAMES = [
     { id: 'balance', name: 'Hold My Beer', color: 'text-neon-pink', Component: Games.HoldMyBeer },
@@ -105,17 +114,10 @@ const App = () => {
            (See index.html for instructions)
       */}
       <div className="fixed bottom-0 left-0 right-0 h-[60px] md:h-[90px] bg-gray-900/90 border-t border-gray-800 flex justify-center items-center z-50 backdrop-blur-sm">
-          {/* --- PASTE YOUR ADSENSE CODE HERE --- */}
-          <p className="text-gray-600 text-xs font-mono">AD SPACE (REPLACE WITH ADSENSE CODE)</p>
-          {/* 
-            Example Code:
-            <ins className="adsbygoogle"
-                 style={{ display: 'block', width: '100%', height: '100%' }}
-                 data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-                 data-ad-slot="XXXXXXXXXX"
-                 data-ad-format="auto"
-                 data-full-width-responsive="true"></ins>
-          */}
+          <ins className="adsbygoogle"
+            style={{ display: 'inline-block', width: '728px', height: '90px', maxWidth: '100%' }}
+            data-ad-client="ca-pub-8187636241583182"
+            data-ad-slot="3512892683"></ins>
       </div>
     </div>
   );
