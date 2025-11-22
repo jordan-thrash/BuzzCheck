@@ -147,11 +147,14 @@ const App = () => {
         4. Ensure you also add the AdSense script tag to your index.html <head> section.
            (See index.html for instructions)
       */}
-      <div className="fixed bottom-0 left-0 right-0 h-[60px] md:h-[90px] bg-gray-900/90 border-t border-gray-800 flex justify-center items-center z-50 backdrop-blur-sm">
+      <div className="fixed bottom-0 left-0 right-0 bg-gray-900/90 border-t border-gray-800 flex justify-center items-center z-50 backdrop-blur-sm min-h-[60px]">
+          {/* BuzzCheck Bottom Banner 1 */}
           <ins className="adsbygoogle"
-            style={{ display: 'inline-block', width: '728px', height: '90px', maxWidth: '100%' }}
-            data-ad-client="ca-pub-8187636241583182"
-            data-ad-slot="3512892683"></ins>
+               style={{ display: 'block', width: '100%' }}
+               data-ad-client="ca-pub-8187636241583182"
+               data-ad-slot="3512892683"
+               data-ad-format="auto"
+               data-full-width-responsive="true"></ins>
       </div>
     </div>
   );
