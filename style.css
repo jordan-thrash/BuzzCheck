@@ -1,0 +1,128 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #282c34;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
+.game-container {
+    background: #3b404e;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    text-align: center;
+    width: 100%;
+    max-width: 400px;
+}
+
+header h1 {
+    margin: 0 0 1.5rem 0;
+    font-size: 2rem;
+    background: linear-gradient(45deg, #ff6b6b, #feca57);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.stats {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 2rem;
+}
+
+.stat-box {
+    background: #21252b;
+    padding: 0.8rem 1.5rem;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 80px;
+}
+
+.stat-box .label {
+    font-size: 0.8rem;
+    color: #abb2bf;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.stat-box .value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #61dafb;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 2rem;
+}
+
+.hole {
+    background: #21252b;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: inset 0 5px 10px rgba(0,0,0,0.3);
+    user-select: none;
+}
+
+.hole:active {
+    transform: scale(0.95);
+}
+
+.hole.active {
+    background: #2c313c;
+}
+
+.mole {
+    animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes pop {
+    0% { transform: scale(0); }
+    100% { transform: scale(1); }
+}
+
+.controls {
+    height: 60px; /* Prevent layout shift */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.start-btn {
+    background: #61dafb;
+    color: #282c34;
+    border: none;
+    padding: 12px 30px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.start-btn:hover {
+    background: #4fa8c7;
+    transform: translateY(-2px);
+}
+
+.game-over {
+    font-size: 1.2rem;
+    color: #ff6b6b;
+    font-weight: bold;
+    margin: 0;
+}

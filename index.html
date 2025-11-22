@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emoji Whack-a-Mole</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const GRID_SIZE = 9;
+        const GAME_DURATION = 30;
+
+        function App() {
+            const [score, setScore] = useState(0);
+            const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
+            const [isPlaying, setIsPlaying] = useState(false);
+            const [activeSlot, setActiveSlot] = useState(null);
+            const [gameOver, setGameOver] = useState(false);
+
+            // Game Timer
+            useEffect(() => {
+                let timer;
+                if (isPlaying && timeLeft > 0) {
+                    timer = setInterval(() => {
+                        setTimeLeft((prev) => prev - 1);
+                    }, 1000);
+                } else if (timeLeft === 0) {
+                    setIsPlaying(false);
+                    setGameOver(true);
+                    setActiveSlot(null);
+                }
+                return () => clearInterval(timer);
+            }, [isPlaying, timeLeft]);
+
+            // Mole Movement
+            useEffect(() => {
+                let moleTimer;
+                if (isPlaying) {
+                    moleTimer = setInterval(() => {
+                        const randomSlot = Math.floor(Math.random() * GRID_SIZE);
+                        setActiveSlot(randomSlot);
+                    }, 800); // Speed of movement
+                }
+                return () => clearInterval(moleTimer);
+            }, [isPlaying]);
+
+            const startGame = () => {
+                setScore(0);
+                setTimeLeft(GAME_DURATION);
+                setIsPlaying(true);
+                setGameOver(false);
+                setActiveSlot(null);
+            };
+
+            const handleWhack = (index) => {
+                if (index === activeSlot && isPlaying) {
+                    setScore((s) => s + 1);
+                    setActiveSlot(null); // Hide immediately on hit
+                }
+            };
+
+            return (
+                <div className="game-container">
+                    <header>
+                        <h1>👾 Emoji Whack!</h1>
+                        <div className="stats">
+                            <div className="stat-box">
+                                <span className="label">Score</span>
+                                <span className="value">{score}</span>
+                            </div>
+                            <div className="stat-box">
+                                <span className="label">Time</span>
+                                <span className="value">{timeLeft}s</span>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div className="grid">
+                        {[...Array(GRID_SIZE)].map((_, i) => (
+                            <div 
+                                key={i} 
+                                className={`hole ${activeSlot === i ? 'active' : ''}`}
+                                onClick={() => handleWhack(i)}
+                            >
+                                {activeSlot === i && <span className="mole">👻</span>}
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="controls">
+                        {!isPlaying && (
+                            <button className="start-btn" onClick={startGame}>
+                                {gameOver ? 'Play Again' : 'Start Game'}
+                            </button>
+                        )}
+                        {gameOver && <p className="game-over">Game Over! Final Score: {score}</p>}
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
