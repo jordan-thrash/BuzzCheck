@@ -58,6 +58,7 @@ const App = () => {
   const [fromAdmin, setFromAdmin] = useState(false);
   const secretTimerRef = useRef(null);
   const animTimerRef = useRef(null);
+  const gameHistoryRef = useRef([]);
 
   useEffect(() => {
     try {
@@ -102,7 +103,25 @@ const App = () => {
     setFromAdmin(view === 'ADMIN');
     setLoading(true); 
     setTimeout(() => { 
-      setCurrentGame(g || GAMES[getRandomInt(0, GAMES.length - 1)]); 
+      let nextGame = g;
+
+      if (!nextGame) {
+        // Filter out recently played games to ensure variety
+        // NOTE: This number should increase if more games get added
+        const HISTORY_SIZE = 5;
+        const availableGames = GAMES.filter(game => !gameHistoryRef.current.includes(game.id));
+        const pool = availableGames.length > 0 ? availableGames : GAMES;
+        
+        nextGame = pool[getRandomInt(0, pool.length - 1)];
+        
+        // Update FIFO queue
+        gameHistoryRef.current.push(nextGame.id);
+        if (gameHistoryRef.current.length > HISTORY_SIZE) {
+          gameHistoryRef.current.shift();
+        }
+      }
+
+      setCurrentGame(nextGame); 
       setView('GAME'); 
       setLoading(false); 
     }, 1000); 
