@@ -1181,6 +1181,7 @@ export const RedLight = ({ onFinish }) => {
 export const BeerGoggles = ({ onFinish }) => {
   const [val, setVal] = useState(10);
   const [target, setTarget] = useState(10);
+  const [timeLeft, setTimeLeft] = useState(10.0);
   
   // Refs for animation loop
   const targetRef = useRef(10);
@@ -1188,6 +1189,22 @@ export const BeerGoggles = ({ onFinish }) => {
   const stateRef = useRef('MOVING'); // 'MOVING' or 'HOLDING'
   const holdTimerRef = useRef(0);
   const reqRef = useRef();
+  const timerRef = useRef(null);
+
+  // Timer
+  useEffect(() => {
+    timerRef.current = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 0) {
+          clearInterval(timerRef.current);
+          onFinish(0); // Time ran out
+          return 0;
+        }
+        return prev - 0.1;
+      });
+    }, 100);
+    return () => clearInterval(timerRef.current);
+  }, [onFinish]);
 
   useEffect(() => {
     // Initialize random start
@@ -1199,8 +1216,8 @@ export const BeerGoggles = ({ onFinish }) => {
         holdTimerRef.current--;
         if (holdTimerRef.current <= 0) {
           stateRef.current = 'MOVING';
-          // Pick a new random velocity/direction (speed 0.05 to 0.15) - Slower
-          velocityRef.current = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 0.1 + 0.05);
+          // Pick a new random velocity/direction (speed 0.02 to 0.08) - Even Slower
+          velocityRef.current = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 0.06 + 0.02);
         }
       } else {
         // Moving
@@ -1215,7 +1232,7 @@ export const BeerGoggles = ({ onFinish }) => {
         targetRef.current = newTarget;
         setTarget(newTarget);
 
-        // Randomly decide to hold (2% chance per frame) - More frequent stops
+        // Randomly decide to hold (2% chance per frame)
         if (Math.random() < 0.02) { 
             stateRef.current = 'HOLDING';
             holdTimerRef.current = getRandomInt(30, 90); // Hold for ~0.5-1.5s
@@ -1230,11 +1247,21 @@ export const BeerGoggles = ({ onFinish }) => {
   }, []);
   
   const handleSubmit = () => { 
+      clearInterval(timerRef.current);
       const diff = Math.abs(val - target);
-      // More forgiving
-      if (diff < 2.0) onFinish(10); 
-      else if (diff < 4.0) onFinish(5); 
-      else onFinish(0); 
+      
+      let score = 0;
+      // Base score on accuracy
+      if (diff < 2.0) score = 10; 
+      else if (diff < 4.0) score = 5; 
+      
+      // Time penalty: Deduct points if slower than 6s remaining (took > 4s)
+      if (timeLeft < 6.0) {
+          const penalty = Math.ceil(6.0 - timeLeft);
+          score -= penalty;
+      }
+
+      onFinish(Math.max(0, score)); 
   };
 
   // Blur amount depends on distance from target
@@ -1242,7 +1269,10 @@ export const BeerGoggles = ({ onFinish }) => {
 
   return (
     <div className="w-full max-w-md p-4 text-center">
-      <h3 className="text-2xl font-bold text-neon-blue mb-4">FIX YOUR VISION</h3>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-2xl font-bold text-neon-blue">FIX YOUR VISION</h3>
+        <span className="text-red-500 font-mono text-xl">{timeLeft.toFixed(1)}s</span>
+      </div>
       <div className="bg-white text-black p-6 rounded-xl mb-8 h-32 flex items-center justify-center">
           <p className="font-serif text-2xl font-bold transition-all duration-75" style={{ filter: `blur(${blurAmount}px)` }}>
             Can you read this clearly?
