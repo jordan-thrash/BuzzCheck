@@ -95,6 +95,11 @@ const App = () => {
     { id: 'pour', name: 'Perfect Pour', color: 'text-yellow-500', Component: Games.PerfectPour },
     { id: 'hydrate', name: 'Hydrate', color: 'text-blue-500', Component: Games.Hydrate },
     { id: 'catch', name: 'Catch Uber', color: 'text-white', Component: Games.CatchUber },
+    { id: 'stumble', name: 'The Stumble', color: 'text-neon-pink', Component: Games.TheStumble },
+    { id: 'charge', name: 'Charge It!', color: 'text-green-400', Component: Games.ChargeIt },
+    { id: 'pattern', name: 'Pattern Lock', color: 'text-blue-400', Component: Games.PatternLock },
+    { id: 'tower', name: 'Tower of Pizza', color: 'text-orange-500', Component: Games.TowerOfPizza },
+    { id: 'slurring', name: 'You\'re Slurring', color: 'text-purple-300', Component: Games.YoureSlurring },
   ];
 
   const startSecretUnlock = () => { animTimerRef.current = setTimeout(() => setIsUnlocking(true), 1000); secretTimerRef.current = setTimeout(() => { setView('ADMIN'); setIsUnlocking(false); }, 3000); };

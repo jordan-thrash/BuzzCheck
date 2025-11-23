@@ -18,21 +18,25 @@ export const HoldMyBeer = ({ onFinish }) => {
   const velocityRef = useRef(0.5);
   const [score, setScore] = useState(100);
   const scoreRef = useRef(100);
-  const [timeLeft, setTimeLeft] = useState(10);
+  const [timeLeft, setTimeLeft] = useState(5); 
+  const [status, setStatus] = useState('WAITING'); // WAITING, PLAYING
   const requestRef = useRef();
 
   const handleSlide = (e) => {
     const val = Number(e.target.value);
     setPosition(val);
     positionRef.current = val;
+    if (status === 'WAITING') setStatus('PLAYING');
   };
 
   useEffect(() => {
+    if (status !== 'PLAYING') return;
+
     const startTime = Date.now();
     const animate = () => {
       const now = Date.now();
       const elapsed = (now - startTime) / 1000;
-      const remaining = Math.max(0, 10 - elapsed);
+      const remaining = Math.max(0, 5 - elapsed); 
       
       setTimeLeft(remaining.toFixed(1));
 
@@ -51,9 +55,9 @@ export const HoldMyBeer = ({ onFinish }) => {
       targetRef.current = Math.max(10, Math.min(90, newPos));
       setTarget(targetRef.current);
 
-      // Check overlap (Tolerance 10)
-      if (Math.abs(positionRef.current - targetRef.current) > 10) {
-        scoreRef.current = Math.max(0, scoreRef.current - 0.4); 
+      // Check overlap (Tolerance 10) - Grace period of 1s
+      if (elapsed > 1.0 && Math.abs(positionRef.current - targetRef.current) > 10) {
+        scoreRef.current = Math.max(0, scoreRef.current - 0.8); 
         setScore(scoreRef.current);
       }
 
@@ -62,44 +66,135 @@ export const HoldMyBeer = ({ onFinish }) => {
 
     requestRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(requestRef.current);
-  }, [onFinish]);
+  }, [onFinish, status]);
 
   return (
     <div className="flex flex-col items-center w-full max-w-md p-4">
       <h3 className="text-2xl font-bold text-neon-pink mb-4">HOLD MY BEER</h3>
+      <div className="w-full flex justify-between items-center mb-2 px-2">
+          <div className="text-xl font-mono text-white">{timeLeft}s</div>
+          <div className="w-2/3 bg-gray-700 h-2 rounded-full"><div className="h-full bg-green-500 transition-all" style={{ width: `${score}%`, backgroundColor: score < 50 ? 'red' : 'lime' }}></div></div>
+      </div>
       <div className="relative w-full h-16 bg-gray-800 rounded-full mb-8 border-2 border-gray-600 overflow-hidden">
         <div className="absolute top-0 h-full w-20 bg-yellow-500/30 border-x-2 border-yellow-500 flex items-center justify-center transition-none" style={{ left: `calc(${target}% - 40px)` }}><Beer className="text-yellow-400" /></div>
         <div className="absolute top-0 h-full w-2 bg-neon-pink transition-none" style={{ left: `${position}%` }} />
+        {status === 'WAITING' && <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white font-bold animate-pulse">MOVE SLIDER TO START</div>}
       </div>
-      <input type="range" min="0" max="100" value={position} onChange={handleSlide} className="w-full h-12 accent-neon-pink cursor-pointer" />
-      <div className="mt-4 text-xl font-mono text-white">{timeLeft}s</div>
-      <div className="w-full bg-gray-700 h-2 rounded-full mt-2"><div className="h-full bg-green-500 transition-all" style={{ width: `${score}%`, backgroundColor: score < 50 ? 'red' : 'lime' }}></div></div>
+      <input type="range" min="0" max="100" value={position} onChange={handleSlide} className="w-full h-12 accent-neon-pink cursor-pointer mb-4 [&::-webkit-slider-thumb]:w-8 [&::-webkit-slider-thumb]:h-8 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full" />
     </div>
   );
 };
 
 export const DrunkText = ({ onFinish }) => {
-  const phrases = ["i literally love you so much rn", "yo can we pls go get mcdonalds", "wait where are you guys", "we should start a podcast"];
+  const phrases = [
+    "i literally love you so much rn", 
+    "yo can we pls go get mcdonalds", 
+    "wait where are you guys", 
+    "we should start a podcast",
+    "did i leave my card at the bar",
+    "im not even that drunk tbh",
+    "come to the bathroom with me",
+    "i think i just saw my ex",
+    "send me the address again",
+    "stop yelling at me im sensitive",
+    "can you call me an uber",
+    "i promise im on my way",
+    "who is that guy over there",
+    "lets go to the after party",
+    "i need pizza immediately"
+  ];
   const [phrase] = useState(phrases[getRandomInt(0, phrases.length - 1)]);
   const [input, setInput] = useState("");
-  const [timeLeft, setTimeLeft] = useState(20);
+  const initialTime = Math.max(5, Math.ceil(phrase.length * 0.35));
+  const [timeLeft, setTimeLeft] = useState(initialTime);
   const [submitted, setSubmitted] = useState(false);
+  const [typos, setTypos] = useState(0);
+  const [clarity, setClarity] = useState(false);
+  const [wobble, setWobble] = useState(0);
+
+  // Clarity Interval
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (Math.random() > 0.7) {
+        setClarity(true);
+        setTimeout(() => setClarity(false), getRandomInt(300, 800)); // Brief moment of clarity
+      }
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Wobble Animation
+  useEffect(() => {
+    let frame;
+    const animate = () => {
+      const time = Date.now();
+      // Create a slow, irregular wobble
+      const angle = Math.sin(time / 500) * 3 + Math.sin(time / 200) * 1.5;
+      setWobble(angle);
+      frame = requestAnimationFrame(animate);
+    };
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
   useEffect(() => {
     if (timeLeft > 0 && !submitted) { const t = setTimeout(() => setTimeLeft(timeLeft - 1), 1000); return () => clearTimeout(t); }
     else if (timeLeft === 0 && !submitted) handleSubmit();
   }, [timeLeft, submitted]);
+
+  const handleKeyDown = (e) => {
+      if (e.key === 'Backspace') {
+          setTypos(t => t + 1);
+      }
+  };
+
   const handleSubmit = () => {
     setSubmitted(true);
     let errors = 0;
     const limit = Math.max(phrase.length, input.length);
     for (let i = 0; i < limit; i++) if (input[i] !== phrase[i]) errors++;
-    onFinish(Math.max(0, 10 - Math.ceil(errors * 1.5)));
+    
+    // Score Calculation
+    // Base: 10
+    // Errors: -1.5 each
+    // Typos (Backspaces): -0.5 each
+    // Time Penalty: If > 10s used (timeLeft < 10), -1 per 2s
+    
+    let score = 10;
+    score -= (errors * 1.5);
+    score -= (typos * 0.5);
+    
+    // Stricter Time Penalty:
+    // If you use more than 70% of the time, score drops rapidly.
+    // At 70% time used: 0 penalty.
+    // At 100% time used: -10 penalty.
+    const timeUsedPct = (initialTime - timeLeft) / initialTime;
+    if (timeUsedPct > 0.7) {
+        score -= Math.ceil((timeUsedPct - 0.7) * 20);
+    }
+
+    onFinish(Math.max(0, Math.ceil(score)));
   };
+
   return (
     <div className="w-full max-w-md p-4 text-center">
       <h3 className="text-2xl font-bold text-neon-blue mb-2">DRUNK TEXT</h3>
-      <div className="bg-gray-800 p-4 rounded-lg border border-gray-600 mb-4"><p className="font-mono text-lg text-white">{phrase}</p></div>
-      <textarea className="w-full bg-gray-900 text-white p-3 rounded border border-neon-blue font-mono mb-4" rows="4" value={input} onChange={(e) => setInput(e.target.value)} autoCorrect="off" />
+      <div className="bg-gray-800 p-4 rounded-lg border border-gray-600 mb-4 overflow-hidden">
+          <p className="font-mono text-lg text-white" style={{ 
+            filter: clarity ? 'none' : 'blur(1.5px)', 
+            transform: clarity ? 'none' : `skewX(${wobble}deg) rotate(${wobble * 0.5}deg) scale(1.05)`,
+            textShadow: clarity ? 'none' : '2px 0 rgba(255,0,0,0.5), -2px 0 rgba(0,255,255,0.5)',
+            transition: 'filter 0.2s, text-shadow 0.2s' // Removed transform transition for smooth animation
+          }}>{phrase}</p>
+      </div>
+      <textarea 
+        className="w-full bg-gray-900 text-white p-3 rounded border border-neon-blue font-mono mb-4" 
+        rows="4" 
+        value={input} 
+        onChange={(e) => setInput(e.target.value)} 
+        onKeyDown={handleKeyDown}
+        autoCorrect="off" 
+      />
       <button onClick={handleSubmit} className="w-full bg-neon-blue text-black font-bold py-2 rounded">SEND IT ({timeLeft}s)</button>
     </div>
   );
@@ -387,8 +482,13 @@ export const ShotPong = ({ onFinish }) => {
   const [barPos, setBarPos] = useState(0);
   const [running, setRunning] = useState(true);
   const [dir, setDir] = useState(1);
-  useEffect(() => { let int; if (running) int = setInterval(() => { setBarPos(p => { if (p >= 100) { setDir(-1); return 99; } if (p <= 0) { setDir(1); return 1; } return p + (5 * dir); }); }, 16); return () => clearInterval(int); }, [running, dir]);
-  const handleStop = () => { setRunning(false); const dist = Math.abs(barPos - 50); onFinish(dist < 4 ? 10 : dist < 15 ? 8 : dist < 25 ? 5 : 0); };
+  useEffect(() => { let int; if (running) int = setInterval(() => { setBarPos(p => { if (p >= 100) { setDir(-1); return 99; } if (p <= 0) { setDir(1); return 1; } return p + (3 * dir); }); }, 16); return () => clearInterval(int); }, [running, dir]);
+  const handleStop = () => { 
+      setRunning(false); 
+      const dist = Math.abs(barPos - 50); 
+      // Widened win zone: < 8 is perfect (was 4), < 20 is good (was 15)
+      onFinish(dist < 8 ? 10 : dist < 20 ? 8 : dist < 30 ? 5 : 0); 
+  };
   return (
     <div className="w-full max-w-md p-4 text-center" onMouseDown={handleStop} onTouchStart={handleStop}>
       <h3 className="text-2xl font-bold text-green-400 mb-8">SHOT PONG</h3>
@@ -403,46 +503,121 @@ export const ShotPong = ({ onFinish }) => {
 
 export const ToiletRush = ({ onFinish }) => {
   const [grid, setGrid] = useState([]);
-  const [timeLeft, setTimeLeft] = useState(5.0);
+  const [timeLeft, setTimeLeft] = useState(4.0);
   const [hidden, setHidden] = useState(false);
   const [targetIndex, setTargetIndex] = useState(-1);
+  const [round, setRound] = useState(1);
+  const [score, setScore] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [phase, setPhase] = useState('INTRO'); // INTRO, PLAYING
+  const [countdown, setCountdown] = useState(3);
 
-  useEffect(() => { 
-      const size = 47; 
+  // Intro Countdown
+  useEffect(() => {
+    if (phase === 'INTRO') {
+        const t = setInterval(() => {
+            setCountdown(c => {
+                if (c <= 1) {
+                    clearInterval(t);
+                    setPhase('PLAYING');
+                    return 0;
+                }
+                return c - 1;
+            });
+        }, 1000);
+        return () => clearInterval(t);
+    }
+  }, [phase]);
+
+  // Init Round
+  useEffect(() => {
+      if (isTransitioning || phase === 'INTRO') return;
+      
+      const size = 29; 
       const t = getRandomInt(0, size); 
       setTargetIndex(t);
       setGrid(Array(size + 1).fill('PERSON').map((_, i) => i === t ? 'TOILET' : 'PERSON')); 
+      setHidden(false);
+      setTimeLeft(4.0);
       
-      // Hide after 800ms
-      setTimeout(() => setHidden(true), 800);
-  }, []);
+      const hideTimer = setTimeout(() => setHidden(true), 800);
+      return () => clearTimeout(hideTimer);
+  }, [round, isTransitioning, phase]);
 
+  // Timer
   useEffect(() => { 
+      if (isTransitioning || phase === 'INTRO') return;
+      
       if (timeLeft > 0) { 
           const t = setTimeout(() => setTimeLeft(p => Math.max(0, p - 0.1)), 100); 
           return () => clearTimeout(t); 
-      } else onFinish(0); 
-  }, [timeLeft, onFinish]);
+      } else {
+          // Time ran out for this round
+          handleRoundComplete(0);
+      }
+  }, [timeLeft, isTransitioning, phase]);
+
+  const handleRoundComplete = (roundScore) => {
+      const newScore = score + roundScore;
+      setScore(newScore);
+      setIsTransitioning(true);
+
+      if (round < 3) {
+          setTimeout(() => {
+              setRound(r => r + 1);
+              setIsTransitioning(false);
+          }, 1000);
+      } else {
+          // Final Score Calculation
+          // Max possible: 30.
+          // Normalize to 10.
+          const final = Math.max(0, Math.ceil(newScore / 3));
+          setTimeout(() => onFinish(final), 500);
+      }
+  };
 
   const handleClick = (i) => {
+      if (isTransitioning || phase === 'INTRO') return;
+      
       if (i === targetIndex) {
-          onFinish(Math.min(10, Math.ceil(timeLeft * 2.5)));
+          // Correct
+          // Score based on speed (Max 10)
+          let s = 2;
+          if (timeLeft > 3.0) s = 10;
+          else if (timeLeft > 2.0) s = 8;
+          else if (timeLeft > 1.0) s = 5;
+          handleRoundComplete(s);
       } else {
-          onFinish(0);
+          // Wrong: Penalty
+          setScore(prev => prev - 3);
       }
   };
 
   return (
-    <div className="w-full max-w-md p-4 text-center">
-      <h3 className="text-2xl font-bold text-blue-300 mb-2">TOILET RUSH</h3>
-      <span className="text-red-500 font-mono text-xl">{timeLeft.toFixed(1)}s</span>
+    <div className="w-full max-w-md p-4 text-center relative">
+      {phase === 'INTRO' && (
+        <div className="absolute inset-0 bg-black/90 z-50 flex flex-col items-center justify-center p-4 rounded-xl">
+            <h3 className="text-2xl font-bold text-blue-300 mb-4">TOILET RUSH</h3>
+            <p className="text-white text-lg mb-2">Memorize the location!</p>
+            <p className="text-gray-400 text-sm mb-8">Find the toilet before it vanishes.</p>
+            <div className="text-6xl font-mono text-white font-bold">{countdown}</div>
+        </div>
+      )}
+
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-2xl font-bold text-blue-300">TOILET RUSH</h3>
+        <div className="flex flex-col items-end">
+            <span className="text-gray-400 text-xs">Round {round}/3</span>
+            <span className="text-red-500 font-mono text-xl">{timeLeft.toFixed(1)}s</span>
+        </div>
+      </div>
       <p className="text-gray-400 text-xs mb-2">{hidden ? "WHERE WAS IT?" : "MEMORIZE!"}</p>
       <div className="grid grid-cols-6 gap-2 mt-4">
         {grid.map((item, i) => (
             <button 
                 key={i} 
                 onClick={() => handleClick(i)} 
-                className="p-2 bg-gray-800 rounded flex items-center justify-center aspect-square active:bg-gray-700"
+                className="p-2 bg-gray-800 rounded flex items-center justify-center aspect-square active:bg-gray-700 transition-colors"
             >
                 {!hidden && item === 'TOILET' ? <div className="text-white font-bold text-xs">WC</div> : <div className="w-4 h-4 rounded-full bg-gray-500"></div>}
             </button>
@@ -569,14 +744,62 @@ export const AlphabetSoup = ({ onFinish }) => {
 
   useEffect(() => {
     const animate = () => {
-      setItems(prev => prev.map(item => {
-        let { x, y, vx, vy } = item;
-        x += vx;
-        y += vy;
-        if (x <= 5 || x >= 85) vx *= -1;
-        if (y <= 5 || y >= 85) vy *= -1;
-        return { ...item, x, y, vx, vy };
-      }));
+      setItems(prev => {
+        // Update positions
+        const nextItems = prev.map(item => {
+            let { x, y, vx, vy, t = Math.random() * 100 } = item;
+            
+            // Erratic movement: Change velocity slightly based on time
+            vx += Math.sin(t * 0.05) * 0.02;
+            vy += Math.cos(t * 0.05) * 0.02;
+            
+            // Dampen/Limit velocity
+            const speed = Math.sqrt(vx*vx + vy*vy);
+            if (speed > 0.4) {
+                vx = (vx / speed) * 0.4;
+                vy = (vy / speed) * 0.4;
+            }
+
+            x += vx;
+            y += vy;
+            if (x <= 5 || x >= 85) vx *= -1;
+            if (y <= 5 || y >= 85) vy *= -1;
+            return { ...item, x, y, vx, vy, t: t + 1 };
+        });
+
+        // Simple Collision Resolution (Push apart)
+        for (let i = 0; i < nextItems.length; i++) {
+            for (let j = i + 1; j < nextItems.length; j++) {
+                const a = nextItems[i];
+                const b = nextItems[j];
+                const dx = a.x - b.x;
+                const dy = a.y - b.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                const minDist = 12; 
+
+                if (dist < minDist && dist > 0) {
+                    // Push apart
+                    const overlap = minDist - dist;
+                    const nx = dx / dist;
+                    const ny = dy / dist;
+                    
+                    a.x += nx * overlap * 0.5;
+                    a.y += ny * overlap * 0.5;
+                    b.x -= nx * overlap * 0.5;
+                    b.y -= ny * overlap * 0.5;
+
+                    // Bounce velocities
+                    const tempVx = a.vx;
+                    const tempVy = a.vy;
+                    a.vx = b.vx;
+                    a.vy = b.vy;
+                    b.vx = tempVx;
+                    b.vy = tempVy;
+                }
+            }
+        }
+        return nextItems;
+      });
       reqRef.current = requestAnimationFrame(animate);
     };
     reqRef.current = requestAnimationFrame(animate);
@@ -795,19 +1018,61 @@ export const InternalClock = ({ onFinish }) => {
 export const TextYourEx = ({ onFinish }) => {
   const [pos, setPos] = useState({ top: 50, left: 50 });
   const [timeLeft, setTimeLeft] = useState(5);
+  const [phase, setPhase] = useState('READY'); // READY, PLAYING
+  const [introText, setIntroText] = useState("");
+  const [countdown, setCountdown] = useState(3);
+
   useEffect(() => {
+    if (phase === 'READY') {
+        const phrases = ["SHE'S NOT WORTH IT", "CONTROL YOURSELF", "STAY STRONG", "DON'T DO IT"];
+        setIntroText(phrases[getRandomInt(0, phrases.length-1)]);
+        
+        const t = setInterval(() => {
+            setCountdown(c => {
+                if (c <= 1) {
+                    clearInterval(t);
+                    setPhase('PLAYING');
+                    return 0;
+                }
+                return c - 1;
+            });
+        }, 800);
+        return () => clearInterval(t);
+    }
+
     const int = setInterval(() => {
-      if (timeLeft > 0) { setPos({ top: getRandomInt(10, 80), left: getRandomInt(10, 80) }); setTimeLeft(t => t - 1); }
-      else { clearInterval(int); onFinish(0); }
+      if (timeLeft > 0) { 
+          setPos({ top: getRandomInt(10, 80), left: getRandomInt(10, 80) }); 
+          setTimeLeft(t => t - 1); 
+      } else { 
+          clearInterval(int); 
+          onFinish(0); 
+      }
     }, 450);
     return () => clearInterval(int);
-  }, [timeLeft, onFinish]);
+  }, [timeLeft, onFinish, phase]);
+
   return (
-    <div className="w-full max-w-md h-96 bg-gray-900 rounded-xl relative overflow-hidden p-4 border border-gray-700" onClick={() => onFinish(0)}>
+    <div className="w-full max-w-md h-96 bg-gray-900 rounded-xl relative overflow-hidden p-4 border border-gray-700" onClick={() => { if(phase === 'PLAYING') onFinish(0); }}>
       <div className="text-center mb-8"><h3 className="text-2xl font-bold text-red-500 mb-2">RISKY TEXT</h3><p className="text-gray-400">Don't send it! Hit delete!</p></div>
       <div className="bg-gray-800 p-4 rounded-lg mb-4"><p className="text-white italic">"i miss u so much..."</p></div>
       <div className="absolute inset-0 flex items-center justify-center -z-0 opacity-20"><Send size={200} /></div>
-      <button onMouseDown={(e) => { e.stopPropagation(); onFinish(10); }} onTouchStart={(e) => { e.stopPropagation(); onFinish(10); }} className="absolute bg-green-500 text-black font-bold py-2 px-4 rounded-full shadow-lg z-10 transition-all duration-300" style={{ top: `${pos.top}%`, left: `${pos.left}%` }}>DELETE ({timeLeft})</button>
+      
+      {phase === 'READY' ? (
+          <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-20 p-4 text-center">
+              <h2 className="text-3xl font-black text-red-500 mb-4 animate-pulse">{introText}</h2>
+              <div className="text-6xl font-mono text-white">{countdown}</div>
+          </div>
+      ) : (
+          <button 
+            onMouseDown={(e) => { e.stopPropagation(); onFinish(10); }} 
+            onTouchStart={(e) => { e.stopPropagation(); onFinish(10); }} 
+            className="absolute bg-green-500 text-black font-bold py-2 px-4 rounded-full shadow-lg z-10 transition-all duration-300" 
+            style={{ top: `${pos.top}%`, left: `${pos.left}%` }}
+          >
+            DELETE ({timeLeft})
+          </button>
+      )}
     </div>
   );
 };
@@ -1115,43 +1380,69 @@ export const SurvivalMode = ({ onFinish }) => {
 export const RedLight = ({ onFinish }) => {
   const [color, setColor] = useState('GREEN'); 
   const [clicks, setClicks] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(10.0);
   const gameOverRef = useRef(false);
+  const colorRef = useRef('GREEN'); // Sync ref for immediate checks
 
   useEffect(() => {
+    gameOverRef.current = false; // Reset on mount
+    
+    // Global Timer
+    const timer = setInterval(() => {
+        if (gameOverRef.current) return;
+        setTimeLeft(prev => {
+            if (prev <= 0) {
+                clearInterval(timer);
+                gameOverRef.current = true;
+                onFinish(0); // Time ran out
+                return 0;
+            }
+            return prev - 0.1;
+        });
+    }, 100);
+
     const runCycle = () => {
         if (gameOverRef.current) return;
         
         // Green Phase
         setColor('GREEN');
+        colorRef.current = 'GREEN';
         
-        // Wait 1.5-2.5s then Warning
+        // Wait 0.8-1.5s (Faster)
         setTimeout(() => {
             if (gameOverRef.current) return;
-            setColor('YELLOW'); // Warning
+            setColor('YELLOW'); 
+            colorRef.current = 'YELLOW';
             
-            // Wait 0.5-1s then STOP
+            // Wait 0.3-0.6s then STOP (Faster reaction needed)
             setTimeout(() => {
                 if (gameOverRef.current) return;
-                setColor('RED'); // Stop
+                setColor('RED'); 
+                colorRef.current = 'RED';
                 
                 // Wait 1-2s then Restart Loop
                 setTimeout(() => {
                     if (gameOverRef.current) return;
-                    runCycle(); // Loop back
+                    runCycle(); 
                 }, getRandomInt(1000, 2000));
                 
-            }, getRandomInt(500, 1000));
+            }, getRandomInt(300, 600));
             
-        }, getRandomInt(1500, 2500));
+        }, getRandomInt(800, 1500));
     };
     
     runCycle();
-    return () => { gameOverRef.current = true; };
+    return () => { 
+        gameOverRef.current = true; 
+        clearInterval(timer);
+    };
   }, []);
 
   const handleTap = () => {
     if (gameOverRef.current) return;
-    if (color === 'RED') {
+    
+    // Check ref for immediate state
+    if (colorRef.current === 'RED') {
         gameOverRef.current = true;
         onFinish(0);
     } else {
@@ -1166,13 +1457,15 @@ export const RedLight = ({ onFinish }) => {
 
   return (
     <div 
-        className={`w-full h-80 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-colors duration-200 ${color === 'GREEN' ? 'bg-green-500' : color === 'YELLOW' ? 'bg-yellow-400' : 'bg-red-600'}`} 
+        className={`w-full h-80 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-colors duration-200 relative ${color === 'GREEN' ? 'bg-green-500' : color === 'YELLOW' ? 'bg-yellow-400' : 'bg-red-600'}`} 
         onPointerDown={(e) => { e.preventDefault(); handleTap(); }} 
-        onClick={(e) => { e.preventDefault(); handleTap(); }}
-        onTouchStart={(e) => { e.preventDefault(); handleTap(); }}
         style={{ touchAction: 'none' }}
     >
-        <div className="text-white font-black text-4xl mb-4 drop-shadow-md">{color === 'GREEN' ? 'TAP!!!' : color === 'YELLOW' ? 'STEADY...' : 'STOP!'}</div>
+        <div className="absolute top-4 w-full flex flex-col items-center pointer-events-none">
+            <span className="text-black/50 font-bold text-sm tracking-widest mb-1">RED LIGHT</span>
+            <span className="text-white font-mono font-bold text-2xl bg-black/20 px-3 py-1 rounded">{timeLeft.toFixed(1)}s</span>
+        </div>
+        <div className="text-white font-black text-4xl mb-4 drop-shadow-md mt-8">{color === 'GREEN' ? 'TAP!!!' : color === 'YELLOW' ? 'STEADY...' : 'STOP!'}</div>
         <div className="text-2xl font-mono font-bold text-black bg-white/50 px-4 py-1 rounded">{clicks}/15</div>
     </div>
   );
@@ -1282,7 +1575,7 @@ export const BeerGoggles = ({ onFinish }) => {
         type="range" min="0" max="20" step="0.1" 
         value={val} 
         onChange={(e) => setVal(Number(e.target.value))} 
-        className="w-full h-12 accent-neon-blue cursor-pointer mb-8" 
+        className="w-full h-12 accent-neon-blue cursor-pointer mb-8 [&::-webkit-slider-thumb]:w-8 [&::-webkit-slider-thumb]:h-8 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full" 
       />
       <button onClick={handleSubmit} className="bg-neon-blue text-black font-bold py-3 px-8 rounded-full text-xl">I CAN SEE!</button>
     </div>
@@ -1498,8 +1791,828 @@ export const CatchUber = ({ onFinish }) => {
       <input 
         type="range" min="0" max="100" value={playerX} 
         onChange={(e) => setPlayerX(Number(e.target.value))} 
-        className="w-full h-16 accent-neon-green cursor-pointer"
+        className="w-full h-16 accent-neon-green cursor-pointer [&::-webkit-slider-thumb]:w-8 [&::-webkit-slider-thumb]:h-8 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full"
       />
+    </div>
+  );
+};
+
+export const TheStumble = ({ onFinish }) => {
+  const [steps, setSteps] = useState(0);
+  const [targetFoot, setTargetFoot] = useState(Math.random() > 0.5 ? 'LEFT' : 'RIGHT');
+  const [status, setStatus] = useState('PLAYING'); // PLAYING, TRIPPED, WON
+  const [timeLeft, setTimeLeft] = useState(100); // Decay bar
+  const [shake, setShake] = useState(false);
+  const [failReason, setFailReason] = useState('TRIPPED'); // TRIPPED or PASSED OUT
+  const decayRef = useRef(null);
+
+  const TARGET_STEPS = 20;
+
+  // Decay Timer
+  useEffect(() => {
+    decayRef.current = setInterval(() => {
+      if (status !== 'PLAYING') return;
+      setTimeLeft(prev => {
+        if (prev <= 0) {
+          clearInterval(decayRef.current);
+          setStatus('TRIPPED');
+          setFailReason('PASSED OUT'); // New fail reason
+          setTimeout(() => onFinish(0), 1500); // Delay finish to show message
+          return 0;
+        }
+        return prev - 1.6; // Increased decay rate (was 1.2)
+      });
+    }, 50);
+    return () => clearInterval(decayRef.current);
+  }, [status, onFinish]);
+
+  const handleStep = (foot) => {
+    if (status !== 'PLAYING') return;
+
+    if (foot !== targetFoot) {
+      // Tripped (Wrong foot)
+      setStatus('TRIPPED');
+      setTimeout(() => {
+          onFinish(Math.min(4, Math.floor((steps / TARGET_STEPS) * 10))); 
+      }, 1500);
+    } else {
+      // Successful step
+      const newSteps = steps + 1;
+      setSteps(newSteps);
+      
+      // Visual Feedback
+      setShake(true);
+      setTimeout(() => setShake(false), 100);
+
+      // High Entropy: Randomize next step
+      setTargetFoot(Math.random() > 0.5 ? 'LEFT' : 'RIGHT');
+      
+      setTimeLeft(Math.min(100, timeLeft + 10)); // Refill balance slightly less
+
+      if (newSteps >= TARGET_STEPS) {
+        setStatus('WON');
+        onFinish(10);
+      }
+    }
+  };
+
+  return (
+    <div className={`w-full max-w-md p-4 text-center select-none ${shake ? 'translate-x-1 translate-y-1' : ''}`}>
+      <h3 className="text-2xl font-bold text-neon-pink mb-2">THE STUMBLE</h3>
+      
+      {/* Balance Bar */}
+      <div className="w-full bg-gray-800 h-4 rounded-full mb-4 overflow-hidden border border-gray-600">
+        <div 
+            className={`h-full transition-all duration-100 ${timeLeft < 30 ? 'bg-red-500' : 'bg-green-500'}`} 
+            style={{ width: `${timeLeft}%` }}
+        ></div>
+      </div>
+
+      {/* Progress Visual */}
+      <div className="w-full flex justify-between items-end h-12 mb-4 px-4 border-b border-gray-700 pb-2">
+          <div className="text-2xl">🏠</div>
+          <div className="flex-1 mx-4 relative h-2 bg-gray-800 rounded-full self-center">
+              <div 
+                className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-neon-pink rounded-full transition-all duration-300"
+                style={{ left: `${(steps / TARGET_STEPS) * 100}%` }}
+              ></div>
+          </div>
+          <div className="text-2xl">🏁</div>
+      </div>
+      
+      <div className="h-40 flex flex-col items-center justify-center mb-4">
+        {status === 'TRIPPED' ? (
+            <div className="flex flex-col items-center">
+                <div className="text-6xl animate-bounce mb-2">💥😵💫</div>
+                <div className="text-red-500 font-bold text-xl">{failReason === 'PASSED OUT' ? 'PASSED OUT!' : 'YOU TRIPPED!'}</div>
+            </div>
+        ) : status === 'WON' ? (
+            <div className="text-6xl animate-bounce">🏃💨🏁</div>
+        ) : (
+            <>
+                <div className="text-gray-500 text-sm mb-2 uppercase tracking-widest">STEP WITH:</div>
+                <div className={`text-8xl font-black transition-all duration-100 ${targetFoot === 'LEFT' ? 'text-neon-blue -translate-x-8' : 'text-neon-pink translate-x-8'}`}>
+                    {targetFoot === 'LEFT' ? 'L' : 'R'}
+                </div>
+                <div className="text-4xl mt-2">
+                    {targetFoot === 'LEFT' ? '🦶' : ' '}
+                    {targetFoot === 'RIGHT' ? '🦶' : ' '}
+                </div>
+            </>
+        )}
+      </div>
+
+      <div className="flex gap-4">
+        <button 
+            onPointerDown={(e) => { e.preventDefault(); handleStep('LEFT'); }}
+            className="flex-1 bg-gray-800 active:bg-neon-blue h-32 rounded-xl text-4xl font-black border-b-4 border-gray-600 active:border-b-0 active:translate-y-1 transition-all"
+            style={{ touchAction: 'none' }}
+        >
+            L
+        </button>
+        <button 
+            onPointerDown={(e) => { e.preventDefault(); handleStep('RIGHT'); }}
+            className="flex-1 bg-gray-800 active:bg-neon-pink h-32 rounded-xl text-4xl font-black border-b-4 border-gray-600 active:border-b-0 active:translate-y-1 transition-all"
+            style={{ touchAction: 'none' }}
+        >
+            R
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export const ChargeIt = ({ onFinish }) => {
+  const [portX, setPortX] = useState(50);
+  const [plugX, setPlugX] = useState(50);
+  const [plugY, setPlugY] = useState(10); // 10% from top
+  const [attempts, setAttempts] = useState(0);
+  const [status, setStatus] = useState('INSTRUCTION'); // INSTRUCTION, AIMING, MOVING, HIT, MISS
+  const [countdown, setCountdown] = useState(3);
+  
+  const portRef = useRef(50);
+  const dirRef = useRef(1);
+  const reqRef = useRef(null);
+
+  // Instruction Phase
+  useEffect(() => {
+      if (status === 'INSTRUCTION') {
+          const t = setInterval(() => {
+              setCountdown(c => {
+                  if (c <= 1) {
+                      clearInterval(t);
+                      setStatus('AIMING');
+                      return 0;
+                  }
+                  return c - 1;
+              });
+          }, 1000);
+          return () => clearInterval(t);
+      }
+  }, [status]);
+
+  // Port Jitter Animation
+  useEffect(() => {
+    const animate = () => {
+      if (status === 'AIMING') {
+        // Smooth wandering movement (Inertia-based)
+        // Randomly adjust velocity (acceleration)
+        dirRef.current += (Math.random() - 0.5) * 0.2;
+        
+        // Cap max speed to keep it trackable but tricky
+        const maxSpeed = 1.8;
+        dirRef.current = Math.max(-maxSpeed, Math.min(maxSpeed, dirRef.current));
+        
+        let next = portRef.current + dirRef.current;
+        
+        // Soft boundaries (push back gently near edges)
+        if (next > 85) dirRef.current -= 0.1;
+        if (next < 15) dirRef.current += 0.1;
+        
+        // Hard bounce off walls
+        if (next > 90) {
+            next = 90;
+            dirRef.current *= -0.6; // Bounce with energy loss
+        } else if (next < 10) {
+            next = 10;
+            dirRef.current *= -0.6;
+        }
+        
+        portRef.current = next;
+        setPortX(next);
+      }
+      reqRef.current = requestAnimationFrame(animate);
+    };
+    reqRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(reqRef.current);
+  }, [status]);
+
+  const handleRelease = () => {
+    if (status !== 'AIMING') return;
+    setStatus('MOVING');
+    
+    // Animate plug dropping
+    let y = 10;
+    const dropInterval = setInterval(() => {
+        y += 5;
+        setPlugY(y);
+        if (y >= 80) { // Hit bottom area
+            clearInterval(dropInterval);
+            checkHit();
+        }
+    }, 16);
+  };
+
+  const checkHit = () => {
+    const diff = Math.abs(plugX - portRef.current);
+    if (diff < 5) { // Hit!
+        setStatus('HIT');
+        // Score based on attempts
+        const score = attempts === 0 ? 10 : attempts === 1 ? 7 : 4;
+        setTimeout(() => onFinish(score), 1000);
+    } else { // Miss
+        setStatus('MISS');
+        const newAttempts = attempts + 1;
+        setAttempts(newAttempts);
+        
+        if (newAttempts >= 3) {
+            setTimeout(() => onFinish(0), 1000);
+        } else {
+            // Reset for next attempt
+            setTimeout(() => {
+                setPlugY(10);
+                setStatus('AIMING');
+            }, 1000);
+        }
+    }
+  };
+
+  return (
+    <div className="w-full max-w-md p-4 text-center flex flex-col justify-between select-none relative">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-2xl font-bold text-green-400">CHARGE IT!</h3>
+        <div className="flex gap-1">
+            {[...Array(3)].map((_, i) => (
+                <div key={i} className={`w-3 h-8 rounded ${i < (3 - attempts) ? 'bg-green-500' : 'bg-gray-700'}`}></div>
+            ))}
+        </div>
+      </div>
+
+      <div className="relative h-80 w-full bg-gray-900 rounded-xl border border-gray-700 overflow-hidden mb-4">
+        {/* Instruction Overlay */}
+        {status === 'INSTRUCTION' && (
+            <div className="absolute inset-0 bg-black/90 z-50 flex flex-col items-center justify-center p-4">
+                <p className="text-white text-xl mb-4 font-bold">PLUG IT IN!</p>
+                <p className="text-gray-400 text-sm mb-8">Drag slider to aim. Release to drop.</p>
+                <div className="text-6xl font-mono text-green-500 font-bold">{countdown}</div>
+            </div>
+        )}
+
+        {/* Plug */}
+        <div 
+            className="absolute w-8 h-16 bg-white rounded-b-lg left-0 transition-none z-20"
+            style={{ left: `calc(${plugX}% - 16px)`, top: `${plugY}%` }}
+        >
+            <div className="w-full h-4 bg-gray-400 border-b border-gray-500"></div>
+            <div className="mx-auto w-4 h-full bg-black/20"></div>
+        </div>
+
+        {/* Sparks on Miss */}
+        {status === 'MISS' && (
+            <div className="absolute bottom-10 left-0 w-full text-center text-4xl animate-ping" style={{ left: `calc(${plugX}% - 20px)` }}>💥</div>
+        )}
+        
+        {/* Success */}
+        {status === 'HIT' && (
+            <div className="absolute inset-0 flex items-center justify-center bg-green-500/20 z-30">
+                <Zap size={64} className="text-green-400 animate-bounce" />
+            </div>
+        )}
+
+        {/* Phone Port */}
+        <div 
+            className="absolute bottom-0 w-24 h-12 bg-gray-800 rounded-t-xl border-t-2 border-x-2 border-gray-600 flex justify-center items-start pt-2 transition-none"
+            style={{ left: `calc(${portX}% - 48px)` }}
+        >
+            <div className="w-10 h-3 bg-black rounded-full border border-gray-700"></div>
+        </div>
+      </div>
+
+      {status === 'AIMING' && (
+          <input 
+            type="range" min="0" max="100" value={plugX} 
+            onChange={(e) => setPlugX(Number(e.target.value))} 
+            onTouchEnd={handleRelease}
+            onMouseUp={handleRelease}
+            className="w-full h-16 accent-white cursor-pointer [&::-webkit-slider-thumb]:w-8 [&::-webkit-slider-thumb]:h-8 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full"
+          />
+      )}
+      {status !== 'AIMING' && <div className="h-16 flex items-center justify-center text-gray-500 font-mono">...</div>}
+    </div>
+  );
+};
+
+export const PatternLock = ({ onFinish }) => {
+  const [pattern, setPattern] = useState([]);
+  const [targetPattern, setTargetPattern] = useState([]);
+  const [status, setStatus] = useState('MEMORIZE'); // MEMORIZE, RECALL, SUCCESS, FAIL
+  const [timeLeft, setTimeLeft] = useState(3); // Reduced from 5
+  const [recallTime, setRecallTime] = useState(0);
+  const [attempts, setAttempts] = useState(0);
+  const [currentPath, setCurrentPath] = useState(null); 
+  
+  // Generate random pattern
+  useEffect(() => {
+    const generatePattern = () => {
+      const points = [];
+      let current = Math.floor(Math.random() * 16); // 4x4 grid
+      points.push(current);
+      
+      for(let i=0; i<7; i++) { // Length 8 (Longer path)
+        const cx = current % 4;
+        const cy = Math.floor(current / 4);
+        
+        // Find valid neighbors (strict adjacency, no jumps)
+        const possible = [];
+        for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+                if (dx === 0 && dy === 0) continue;
+                const nx = cx + dx;
+                const ny = cy + dy;
+                if (nx >= 0 && nx < 4 && ny >= 0 && ny < 4) {
+                    const next = ny * 4 + nx;
+                    if (!points.includes(next)) {
+                        possible.push(next);
+                    }
+                }
+            }
+        }
+        
+        if (possible.length === 0) break;
+        current = possible[Math.floor(Math.random() * possible.length)];
+        points.push(current);
+      }
+      setTargetPattern(points);
+    };
+    generatePattern();
+  }, []);
+
+  // Timer for Memorize phase
+  useEffect(() => {
+    if (status === 'MEMORIZE') {
+      const timer = setInterval(() => {
+        setTimeLeft(t => {
+          if (t <= 1) {
+            clearInterval(timer);
+            setStatus('RECALL');
+            return 0;
+          }
+          return t - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [status]);
+
+  // Timer for Recall phase (for scoring)
+  useEffect(() => {
+      if (status === 'RECALL') {
+          const t = setInterval(() => setRecallTime(prev => prev + 0.1), 100);
+          return () => clearInterval(t);
+      }
+  }, [status]);
+
+  const handleTouchStart = (index) => {
+    if (status !== 'RECALL') return;
+    setPattern([index]);
+    setCurrentPath({ start: index, end: index }); 
+  };
+
+  const handleTouchMove = (e) => {
+    if (status !== 'RECALL' || pattern.length === 0) return;
+    
+    const touch = e.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    
+    if (element && element.dataset.index) {
+        const index = parseInt(element.dataset.index);
+        if (!pattern.includes(index)) {
+            const last = pattern[pattern.length - 1];
+            
+            // Strict adjacency check
+            const lx = last % 4;
+            const ly = Math.floor(last / 4);
+            const cx = index % 4;
+            const cy = Math.floor(index / 4);
+            
+            if (Math.abs(lx - cx) <= 1 && Math.abs(ly - cy) <= 1) {
+                 setPattern([...pattern, index]);
+            }
+        }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (status !== 'RECALL') return;
+    
+    if (pattern.length > 0) {
+        const isCorrect = pattern.length === targetPattern.length && pattern.every((val, index) => val === targetPattern[index]);
+        if (isCorrect) {
+            setStatus('SUCCESS');
+            // Score: Base 10. Minus 2 per attempt. Minus 1 per 2 seconds.
+            let score = 10 - (attempts * 2) - Math.floor(recallTime / 2);
+            setTimeout(() => onFinish(Math.max(1, score)), 1000);
+        } else {
+            const newAttempts = attempts + 1;
+            setAttempts(newAttempts);
+            if (newAttempts >= 3) {
+                setStatus('FAIL');
+                setTimeout(() => onFinish(0), 1000);
+            } else {
+                setPattern([]);
+            }
+        }
+    }
+  };
+
+  // Mouse fallback
+  const handleMouseDown = (index) => handleTouchStart(index);
+  const handleMouseEnter = (index) => {
+      if (status === 'RECALL' && pattern.length > 0 && !pattern.includes(index)) {
+           // Add adjacency check here too for mouse
+            const last = pattern[pattern.length - 1];
+            const lx = last % 4;
+            const ly = Math.floor(last / 4);
+            const cx = index % 4;
+            const cy = Math.floor(index / 4);
+            
+            if (Math.abs(lx - cx) <= 1 && Math.abs(ly - cy) <= 1) {
+                 setPattern(prev => [...prev, index]);
+            }
+      }
+  };
+  const handleMouseUp = handleTouchEnd;
+
+  const renderConnection = (p1, p2, isTarget) => {
+    const x1 = (p1 % 4) * 25 + 12.5;
+    const y1 = Math.floor(p1 / 4) * 25 + 12.5;
+    const x2 = (p2 % 4) * 25 + 12.5;
+    const y2 = Math.floor(p2 / 4) * 25 + 12.5;
+    
+    return (
+      <line 
+        key={`${p1}-${p2}`}
+        x1={`${x1}%`} y1={`${y1}%`} 
+        x2={`${x2}%`} y2={`${y2}%`} 
+        stroke={isTarget ? "rgba(52, 211, 153, 0.5)" : "white"} 
+        strokeWidth="4"
+      />
+    );
+  };
+
+  return (
+    <div className="w-full max-w-md p-4 text-center select-none"
+         onTouchMove={handleTouchMove}
+         onMouseUp={handleMouseUp}
+         onTouchEnd={handleTouchEnd}
+         style={{ touchAction: 'none' }}
+    >
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-2xl font-bold text-purple-400">
+            {status === 'MEMORIZE' ? 'MEMORIZE!' : status === 'RECALL' ? 'DRAW IT!' : status}
+        </h3>
+        <div className="flex flex-col items-end">
+            {status === 'RECALL' && <span className="text-red-500 font-mono text-sm">Attempts: {attempts}/3</span>}
+            {status === 'MEMORIZE' && <span className="text-white font-bold text-xl">{timeLeft}s</span>}
+        </div>
+      </div>
+
+      <div className="relative w-64 h-64 mx-auto bg-gray-900 rounded-xl p-4">
+        <svg className="absolute inset-4 w-[calc(100%-2rem)] h-[calc(100%-2rem)] pointer-events-none z-10">
+          {status === 'MEMORIZE' && targetPattern.map((p, i) => {
+            if (i === 0) return null;
+            return renderConnection(targetPattern[i-1], p, true);
+          })}
+          {pattern.map((p, i) => {
+            if (i === 0) return null;
+            return renderConnection(pattern[i-1], p, false);
+          })}
+        </svg>
+
+        <div className="grid grid-cols-4 h-full">
+          {[...Array(16)].map((_, i) => (
+            <div 
+              key={i}
+              data-index={i}
+              onMouseDown={() => handleMouseDown(i)}
+              onMouseEnter={() => handleMouseEnter(i)}
+              onTouchStart={() => handleTouchStart(i)}
+              className={`
+                relative z-20 rounded-full w-3 h-3 m-auto transition-all duration-200
+                ${status === 'MEMORIZE' && targetPattern.includes(i) ? (targetPattern[0] === i ? 'bg-white scale-150 ring-4 ring-green-400 z-30' : 'bg-green-400 scale-150 shadow-[0_0_10px_rgba(52,211,153,0.8)]') : ''}
+                ${pattern.includes(i) ? 'bg-white scale-125' : 'bg-gray-600'}
+                ${status === 'FAIL' && pattern.includes(i) ? 'bg-red-500' : ''}
+                ${status === 'SUCCESS' && pattern.includes(i) ? 'bg-green-500' : ''}
+              `}
+            >
+                <div className="absolute inset-[-10px] z-10" data-index={i}></div>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      <p className="mt-4 text-gray-400 text-sm">
+        {status === 'MEMORIZE' ? 'Watch the pattern...' : 'Connect the dots!'}
+      </p>
+    </div>
+  );
+};
+
+export const TowerOfPizza = ({ onFinish }) => {
+  const [stack, setStack] = useState([]); // Array of x offsets
+  const [boxX, setBoxX] = useState(50);
+  const [status, setStatus] = useState('PLAYING'); // PLAYING, DROPPING, FALLEN, WON
+  const [fallingBox, setFallingBox] = useState(null); // { x, y }
+  
+  const speedRef = useRef(0.8); // Increased initial speed (was 0.5)
+  const directionRef = useRef(1); 
+  const reqRef = useRef(null);
+  const dropRef = useRef(null);
+
+  useEffect(() => {
+    const animate = () => {
+      if (status === 'PLAYING') {
+        setBoxX(prev => {
+            let next = prev + (speedRef.current * directionRef.current);
+            if (next >= 90 || next <= 10) {
+                directionRef.current *= -1; 
+                next = Math.max(10, Math.min(90, next));
+            }
+            return next;
+        });
+      }
+      reqRef.current = requestAnimationFrame(animate);
+    };
+    reqRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(reqRef.current);
+  }, [status]); 
+
+  const dropBox = () => {
+    if (status !== 'PLAYING') return;
+    
+    setStatus('DROPPING');
+    const startX = boxX;
+    
+    let topY = 0;
+    const targetTopY = 320 - ((stack.length + 1) * 16); 
+
+    const animateDrop = () => {
+        if (topY < targetTopY) {
+            topY += 20; // Faster drop speed (was 15)
+            setFallingBox({ x: startX, y: topY });
+            dropRef.current = requestAnimationFrame(animateDrop);
+        } else {
+            setFallingBox(null);
+            const newStack = [...stack, startX];
+            setStack(newStack);
+            
+            if (newStack.length > 1) {
+                const prev = newStack[newStack.length - 2];
+                const diff = Math.abs(startX - prev);
+                
+                // Stricter tolerance: 12 (was 20)
+                if (diff > 12) { 
+                    setStatus('FALLEN');
+                    setTimeout(() => onFinish(Math.min(4, newStack.length - 1)), 1000);
+                    return;
+                }
+                
+                // Alignment Penalty: If not perfectly aligned (> 5px off), reduce score potential
+                // We can track this via a ref or just deduct at the end.
+                // For now, let's just be stricter on the "WON" condition or add a visual "WOBBLE"
+                if (diff > 5) {
+                    // Maybe add a wobble effect or sound?
+                    // For now, we'll just accept it but it's "wobbly"
+                }
+            }
+
+            // Reduced target stack: 5 (was 10)
+            if (newStack.length >= 5) {
+                // Calculate final score based on alignment
+                let totalError = 0;
+                for(let i=1; i<newStack.length; i++) {
+                    totalError += Math.abs(newStack[i] - newStack[i-1]);
+                }
+                // Perfect score 10. Deduct 1 point for every 5 units of total error.
+                const penalty = Math.floor(totalError / 5);
+                const finalScore = Math.max(1, 10 - penalty); 
+                
+                setStatus('WON');
+                setTimeout(() => onFinish(finalScore), 1000);
+            } else {
+                speedRef.current += 0.15; // Faster acceleration
+                setStatus('PLAYING');
+            }
+        }
+    };
+    dropRef.current = requestAnimationFrame(animateDrop);
+  };
+
+  useEffect(() => {
+      return () => cancelAnimationFrame(dropRef.current);
+  }, []);
+
+  return (
+    <div className="w-full max-w-md p-4 text-center flex flex-col justify-between select-none" onPointerDown={dropBox}>
+      <h3 className="text-2xl font-bold text-orange-500 mb-2">TOWER OF PIZZA</h3>
+      <p className="text-gray-400 mb-4">{stack.length}/5 Stacked</p>
+      
+      <div className="relative h-80 w-full bg-gray-900 rounded-xl border border-gray-700 overflow-hidden mb-4">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gray-700"></div>
+        
+        {status !== 'DROPPING' && (
+            <div 
+                className="absolute top-0 w-12 h-4 bg-orange-600 border border-orange-800 rounded-sm shadow-md"
+                style={{ left: `calc(${boxX}% - 24px)` }}
+            >
+                <div className="absolute -top-4 left-1/2 w-0.5 h-4 bg-gray-500 -translate-x-1/2"></div>
+            </div>
+        )}
+
+        {fallingBox && (
+            <div 
+                className="absolute w-12 h-4 bg-orange-600 border border-orange-800 rounded-sm shadow-sm"
+                style={{ 
+                    left: `calc(${fallingBox.x}% - 24px)`, 
+                    top: `${fallingBox.y}px`
+                }}
+            ></div>
+        )}
+
+        <div className="absolute bottom-0 w-full h-full pointer-events-none">
+            {stack.map((x, i) => (
+                <div 
+                    key={i} 
+                    className="absolute w-12 h-4 bg-orange-600 border border-orange-800 rounded-sm shadow-sm transition-all"
+                    style={{ 
+                        left: `calc(${x}% - 24px)`, 
+                        bottom: `${i * 16}px`,
+                        transform: status === 'FALLEN' ? `rotate(${Math.random() * 60 - 30}deg)` : 'none',
+                        opacity: status === 'FALLEN' ? 0.8 : 1
+                    }}
+                ></div>
+            ))}
+        </div>
+        
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 h-2 bg-gray-500"></div>
+      </div>
+      
+      <p className="text-gray-500 text-sm animate-pulse">TAP TO DROP</p>
+    </div>
+  );
+};
+
+export const YoureSlurring = ({ onFinish }) => {
+  const WORDS = [
+      { word: "BURRITO", hint: "Late Night Food" },
+      { word: "TEQUILA", hint: "One Shot..." },
+      { word: "KEBAB", hint: "Street Meat" },
+      { word: "UBER", hint: "Get Home Safe" },
+      { word: "WATER", hint: "Hydrate!" },
+      { word: "PIZZA", hint: "Cheesy Slice" },
+      { word: "TOILET", hint: "Emergency!" }
+  ];
+  const [target, setTarget] = useState({ word: "", hint: "" });
+  const [letters, setLetters] = useState([]);
+  const [input, setInput] = useState("");
+  const [timeLeft, setTimeLeft] = useState(15);
+  const [mistakes, setMistakes] = useState(0);
+  const [showHint, setShowHint] = useState(false);
+  
+  const reqRef = useRef(null);
+
+  useEffect(() => {
+    const w = WORDS[getRandomInt(0, WORDS.length - 1)];
+    setTarget(w);
+    
+    // Init floating letters
+    const chars = w.word.split('').map((c, i) => ({
+        id: i,
+        char: c,
+        x: getRandomInt(10, 90),
+        y: getRandomInt(10, 90),
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: (Math.random() - 0.5) * 0.5,
+        visible: true
+    }));
+    setLetters(chars);
+
+    // Timer
+    const t = setInterval(() => {
+        setTimeLeft(prev => {
+            if (prev <= 0) {
+                clearInterval(t);
+                onFinish(0);
+                return 0;
+            }
+            return prev - 1;
+        });
+    }, 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  // Animation Loop
+  useEffect(() => {
+    const animate = () => {
+      setLetters(prev => {
+          const nextItems = prev.map(l => {
+              let { x, y, vx, vy } = l;
+              x += vx; y += vy;
+              if (x <= 5 || x >= 95) vx *= -1;
+              if (y <= 5 || y >= 95) vy *= -1;
+              return { ...l, x, y, vx, vy };
+          });
+
+          // Collision Logic (Anti-overlap)
+          for (let i = 0; i < nextItems.length; i++) {
+            for (let j = i + 1; j < nextItems.length; j++) {
+                const a = nextItems[i];
+                const b = nextItems[j];
+                if (!a.visible || !b.visible) continue;
+
+                const dx = a.x - b.x;
+                const dy = a.y - b.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                const minDist = 12; 
+
+                if (dist < minDist && dist > 0) {
+                    const overlap = minDist - dist;
+                    const nx = dx / dist;
+                    const ny = dy / dist;
+                    
+                    a.x += nx * overlap * 0.5;
+                    a.y += ny * overlap * 0.5;
+                    b.x -= nx * overlap * 0.5;
+                    b.y -= ny * overlap * 0.5;
+
+                    const tempVx = a.vx;
+                    const tempVy = a.vy;
+                    a.vx = b.vx;
+                    a.vy = b.vy;
+                    b.vx = tempVx;
+                    b.vy = tempVy;
+                }
+            }
+          }
+          return nextItems;
+      });
+      reqRef.current = requestAnimationFrame(animate);
+    };
+    reqRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(reqRef.current);
+  }, []);
+
+  const handleTap = (l) => {
+    if (!l.visible) return;
+    
+    const expectedChar = target.word[input.length];
+    if (l.char === expectedChar) {
+        // Correct
+        const newInput = input + l.char;
+        setInput(newInput);
+        setLetters(prev => prev.map(item => item.id === l.id ? { ...item, visible: false } : item));
+        
+        if (newInput === target.word) {
+            // Win
+            // Score: (TimeLeft / 15) * 10 - (Mistakes * 2)
+            const timeScore = (timeLeft / 15) * 10;
+            const penalty = mistakes * 2;
+            onFinish(Math.max(0, Math.ceil(timeScore - penalty)));
+        }
+    } else {
+        // Wrong
+        setMistakes(m => m + 1);
+        // Shake effect?
+    }
+  };
+
+  const handleHint = () => {
+      if (!showHint) {
+          setShowHint(true);
+          setTimeLeft(t => Math.max(0, t - 3)); // Penalty
+      }
+  };
+
+  return (
+    <div className="w-full max-w-md p-4 text-center flex flex-col">
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-2xl font-bold text-purple-300">UNSCRAMBLE</h3>
+        <span className="text-red-500 font-mono font-bold">{timeLeft}s</span>
+      </div>
+      
+      <p className="text-gray-400 text-sm mb-4 italic flex items-center justify-center">
+          Hint: {target.hint}
+          {!showHint && <button onClick={handleHint} className="ml-2 text-xs bg-gray-700 px-2 py-1 rounded text-white hover:bg-gray-600">Show 1st Letter (-3s)</button>}
+          {showHint && <span className="ml-2 text-neon-pink font-bold">Starts with {target.word[0]}</span>}
+      </p>
+      
+      <div className="bg-gray-800 p-4 rounded-xl mb-4 min-h-[60px] flex items-center justify-center border border-gray-600">
+        <span className="text-3xl font-mono tracking-widest text-white">{input}</span>
+        <span className="text-3xl font-mono tracking-widest text-gray-600">{target.word.slice(input.length).replace(/./g, '_')}</span>
+      </div>
+
+      <div className="relative h-64 w-full bg-gray-900 rounded-xl border border-gray-700 overflow-hidden">
+        {letters.map(l => l.visible && (
+            <button
+                key={l.id}
+                onPointerDown={(e) => { e.preventDefault(); handleTap(l); }}
+                className="absolute w-12 h-12 bg-gray-700 border border-white rounded-lg flex items-center justify-center text-xl font-bold shadow-lg active:scale-90 transition-transform"
+                style={{ left: `${l.x}%`, top: `${l.y}%`, transform: 'translate(-50%, -50%)', touchAction: 'none' }}
+            >
+                {l.char}
+            </button>
+        ))}
+      </div>
     </div>
   );
 };
