@@ -246,13 +246,47 @@ export const TipCalculator = ({ onFinish }) => {
     } else if (q.label === 'HARD' && diff < 1.0) { onFinish(5); } else if (q.label === 'MEDIUM' && diff < 0.6) { onFinish(4); } else { onFinish(0); }
   };
 
+  const handleKeypad = (val) => {
+    if (val === 'DEL') {
+      setInput(prev => prev.slice(0, -1));
+    } else if (val === 'ENTER') {
+      check();
+    } else {
+      if (input.length < 6) setInput(prev => prev + val);
+    }
+  };
+
   if (!q) return null;
   return (
     <div className="w-full max-w-md p-4 text-center">
       <div className="flex justify-between items-center mb-4"><h3 className="text-2xl font-bold text-yellow-400">TIP CALC</h3><span className={`text-xs font-bold px-2 py-1 rounded ${q.label === 'HARD' ? 'bg-red-500 text-black' : q.label === 'MEDIUM' ? 'bg-yellow-600 text-white' : 'bg-green-600 text-white'}`}>{q.label}</span></div>
-      <div className="bg-gray-800 p-6 rounded-xl mb-4 border-2 border-yellow-500"><p className="text-gray-400 uppercase text-sm tracking-widest mb-1">TIME LEFT: <span className="text-red-500 font-bold">{timeLeft}s</span></p><p className="text-5xl font-mono text-white">${q.bill}</p><p className="text-yellow-400 font-bold mt-2">What is 20%?</p></div>
-      <input type="number" className="w-32 bg-gray-900 text-white text-3xl p-2 text-center rounded border border-gray-600 mb-4" value={input} onChange={e => setInput(e.target.value)} placeholder="?.??" />
-      <button onClick={check} className="w-full bg-yellow-500 text-black font-bold py-3 rounded-lg hover:bg-yellow-400">SUBMIT</button>
+      
+      <div className="bg-gray-800 p-4 rounded-xl mb-4 border-2 border-yellow-500">
+        <div className="flex justify-between items-center mb-2">
+            <p className="text-gray-400 uppercase text-xs tracking-widest">BILL</p>
+            <p className="text-red-500 font-bold">{timeLeft}s</p>
+        </div>
+        <p className="text-4xl font-mono text-white mb-2">${q.bill}</p>
+        <p className="text-yellow-400 font-bold text-sm mb-2">What is 20%?</p>
+        <div className="bg-black/50 p-2 rounded border border-gray-600 h-12 flex items-center justify-center">
+            <span className="text-2xl font-mono text-neon-green">{input || '?.??'}</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2">
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0, 'DEL'].map((k) => (
+            <button 
+                key={k} 
+                onClick={() => handleKeypad(k)}
+                className={`h-12 rounded-lg font-bold text-xl active:scale-95 transition-transform ${k === 'DEL' ? 'bg-red-900/50 text-red-400' : 'bg-gray-700 hover:bg-gray-600 text-white'}`}
+            >
+                {k === 'DEL' ? '⌫' : k}
+            </button>
+        ))}
+        <button onClick={() => handleKeypad('ENTER')} className="col-span-3 bg-yellow-500 text-black font-bold py-3 rounded-lg hover:bg-yellow-400 active:scale-95 transition-transform mt-1">
+            ENTER TIP
+        </button>
+      </div>
     </div>
   );
 };
