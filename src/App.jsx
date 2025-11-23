@@ -188,30 +188,46 @@ const App = () => {
       )}
 
       {view === 'RESULT' && (
-        <div className="z-10 text-center max-w-md w-full animate-scale-in">
-          <div className="bg-gray-900 p-8 rounded-2xl border border-gray-700 shadow-2xl">
-            {result.icon}
-            <h2 className="text-gray-400 uppercase tracking-widest text-sm mb-2">Score</h2>
-            <div className="text-8xl font-black mb-2 flex justify-center items-baseline">
-              <span className={result.color}>{finalScore}</span>
-              <span className="text-4xl text-gray-600">/10</span>
+        <div className="z-10 text-center max-w-md w-full animate-scale-in px-4">
+          <div className="bg-gray-900 p-5 rounded-2xl border border-gray-700 shadow-2xl">
+            {/* Compact Header */}
+            <div className="flex flex-col items-center">
+                <div className="scale-75 origin-bottom -mb-2">{result.icon}</div>
+                <h2 className="text-gray-500 uppercase tracking-widest text-xs mb-1">Score</h2>
+                <div className="text-7xl font-black flex justify-center items-baseline leading-none mb-4">
+                  <span className={result.color}>{finalScore}</span>
+                  <span className="text-3xl text-gray-600 ml-1">/10</span>
+                </div>
             </div>
-            <div className="h-px w-full bg-gray-700 my-6"></div>
-            <h3 className="text-xl font-bold text-white mb-1">Est. Intake:</h3>
-            <p className={`text-2xl font-bold mb-6 ${result.color}`}>{result.d}</p>
-            <div className="bg-black p-4 rounded-lg border border-gray-700 rotate-1">
-              <p className="text-lg italic text-white">"{result.c}"</p>
+
+            <div className="h-px w-full bg-gray-800 mb-4"></div>
+
+            {/* Result Info */}
+            <div className="mb-4">
+                <h3 className="text-xs font-bold text-gray-500 uppercase mb-1">Est. Intake</h3>
+                <p className={`text-xl font-black ${result.color}`}>{result.d}</p>
+            </div>
+
+            {/* Quote */}
+            <div className="bg-black/40 p-3 rounded-xl border border-gray-800 mb-5">
+              <p className="text-base italic text-white leading-snug">"{result.c}"</p>
             </div>
             
-            {/* Small Disclaimer */}
-            <div className="mt-6 pt-4 border-t border-gray-800">
-              <p className="text-[10px] text-gray-500 leading-relaxed">
-                ⚠️ ENTERTAINMENT ONLY. This score does not prove you are sober. 
-                <span className="block mt-1 text-gray-600">Never use this app to decide if you can drive.</span>
+            {/* Big Visible Button */}
+            <button 
+                onClick={() => setView(fromAdmin ? 'ADMIN' : 'HOME')} 
+                className="w-full bg-white text-black font-black py-3.5 rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2 mb-4"
+            >
+                <RotateCcw size={20} /> TEST AGAIN
+            </button>
+
+            {/* Minimal Disclaimer */}
+            <div className="pt-3 border-t border-gray-800/50">
+              <p className="text-[10px] text-gray-600 leading-tight">
+                ⚠️ ENTERTAINMENT ONLY. <span className="block text-gray-500 mt-1">Do not use to assess driving ability.</span>
               </p>
             </div>
           </div>
-          <button onClick={() => setView(fromAdmin ? 'ADMIN' : 'HOME')} className="mt-8 flex items-center justify-center gap-2 mx-auto text-gray-400 hover:text-white transition-colors"><RotateCcw size={20} /><span>Test Again</span></button>
         </div>
       )}
 
