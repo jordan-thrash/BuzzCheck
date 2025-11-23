@@ -5,6 +5,49 @@ import {
 import { getRandomInt } from './utils/helpers';
 import * as Games from './games';
 
+const RESULTS = {
+  SOBER: [
+    "You are sober enough to explain the plot of Inception.",
+    "Designated Driver energy. Sorry, I don't make the rules.",
+    "Go home and do your taxes. You're too responsible for this.",
+    "You have the reaction time of a fighter pilot. Boring.",
+    "You are currently 0% fun. Go drink a water.",
+    "Your parents would be proud. Your friends are disappointed.",
+    "You could legally operate a forklift right now.",
+    "Stop playing this and go calculate everyone's split of the bill.",
+  ],
+  BUZZED: [
+    "You think you're whispering, but you're actually yelling.",
+    "You're at the 'I love this song' stage of the night.",
+    "Slightly cooked. Medium rare.",
+    "You're vibing, but stay away from the aux cord.",
+    "Confident enough to dance, sober enough to regret it tomorrow.",
+    "Main character energy, but the budget is low.",
+    "You're fine, but don't try to jump over anything.",
+    "Approaching the danger zone. Eat a fry.",
+  ],
+  DRUNK: [
+    "Put the phone down before you text your ex.",
+    "You are currently entering Goblin Mode.",
+    "Your depth perception is just a suggestion right now.",
+    "Don't look at your bank account until Wednesday.",
+    "You just tried to unlock your front door with a library card.",
+    "Order the pizza. Do it. You need the cheese.",
+    "You're walking in cursive.",
+    "Access to social media should be revoked immediately.",
+  ],
+  WASTED: [
+    "Sir, you are talking to a lamp.",
+    "You have the coordination of a baby giraffe on ice.",
+    "404: Brain not found.",
+    "You are absolutely cooked. Burnt toast.",
+    "Go sleep on the nearest soft surface.",
+    "I'm surprised you haven't dropped your phone yet.",
+    "You are a hazard to yourself and the furniture.",
+    "Game Over. Literally. Go to bed.",
+  ]
+};
+
 const App = () => {
   const [view, setView] = useState('HOME'); // HOME, GAME, RESULT, ADMIN
   const [showDisclaimer, setShowDisclaimer] = useState(false);
@@ -67,10 +110,30 @@ const App = () => {
   const handleGameFinish = (s) => { setFinalScore(s); setView('RESULT'); };
   
   const result = (() => {
-    if (finalScore >= 9) return { d: "0 (Designated Driver)", c: "Boringly sober. You're driving.", color: "text-green-500", icon: <Car className="w-16 h-16 mx-auto mb-4 text-green-500" /> };
-    if (finalScore >= 7) return { d: "1-2 Drinks", c: "Slight buzz. Don't text her.", color: "text-yellow-400", icon: <PartyPopper className="w-16 h-16 mx-auto mb-4 text-yellow-400" /> };
-    if (finalScore >= 4) return { d: "3-5 Drinks", c: "Sloppy. Drink water immediately.", color: "text-orange-500", icon: <Beer className="w-16 h-16 mx-auto mb-4 text-orange-500" /> };
-    return { d: "WASTED", c: "You are talking to a lamp.", color: "text-red-600", icon: <Skull className="w-16 h-16 mx-auto mb-4 text-red-600 animate-pulse" /> };
+    if (finalScore >= 9) return { 
+      d: "0 (Designated Driver)", 
+      c: RESULTS.SOBER[getRandomInt(0, RESULTS.SOBER.length - 1)], 
+      color: "text-green-500", 
+      icon: <Car className="w-16 h-16 mx-auto mb-4 text-green-500" /> 
+    };
+    if (finalScore >= 7) return { 
+      d: "1-2 Drinks", 
+      c: RESULTS.BUZZED[getRandomInt(0, RESULTS.BUZZED.length - 1)], 
+      color: "text-yellow-400", 
+      icon: <PartyPopper className="w-16 h-16 mx-auto mb-4 text-yellow-400" /> 
+    };
+    if (finalScore >= 4) return { 
+      d: "3-5 Drinks", 
+      c: RESULTS.DRUNK[getRandomInt(0, RESULTS.DRUNK.length - 1)], 
+      color: "text-orange-500", 
+      icon: <Beer className="w-16 h-16 mx-auto mb-4 text-orange-500" /> 
+    };
+    return { 
+      d: "WASTED", 
+      c: RESULTS.WASTED[getRandomInt(0, RESULTS.WASTED.length - 1)], 
+      color: "text-red-600", 
+      icon: <Skull className="w-16 h-16 mx-auto mb-4 text-red-600 animate-pulse" /> 
+    };
   })();
 
   return (
