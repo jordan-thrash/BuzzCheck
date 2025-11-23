@@ -1146,12 +1146,60 @@ export const RedLight = ({ onFinish }) => {
 
 export const BeerGoggles = ({ onFinish }) => {
   const [val, setVal] = useState(10);
-  const [target] = useState(() => getRandomInt(2, 18)); // Random target between 2 and 18
+  const [target, setTarget] = useState(10);
+  
+  // Refs for animation loop
+  const targetRef = useRef(10);
+  const velocityRef = useRef(0.15);
+  const stateRef = useRef('MOVING'); // 'MOVING' or 'HOLDING'
+  const holdTimerRef = useRef(0);
+  const reqRef = useRef();
+
+  useEffect(() => {
+    // Initialize random start
+    targetRef.current = getRandomInt(2, 18);
+    setTarget(targetRef.current);
+
+    const animate = () => {
+      if (stateRef.current === 'HOLDING') {
+        holdTimerRef.current--;
+        if (holdTimerRef.current <= 0) {
+          stateRef.current = 'MOVING';
+          // Pick a new random velocity/direction (speed 0.05 to 0.15) - Slower
+          velocityRef.current = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 0.1 + 0.05);
+        }
+      } else {
+        // Moving
+        let newTarget = targetRef.current + velocityRef.current;
+        
+        // Bounce off edges (keep within 2-18)
+        if (newTarget <= 2 || newTarget >= 18) {
+            velocityRef.current *= -1;
+            newTarget = Math.max(2, Math.min(18, newTarget));
+        }
+        
+        targetRef.current = newTarget;
+        setTarget(newTarget);
+
+        // Randomly decide to hold (2% chance per frame) - More frequent stops
+        if (Math.random() < 0.02) { 
+            stateRef.current = 'HOLDING';
+            holdTimerRef.current = getRandomInt(30, 90); // Hold for ~0.5-1.5s
+        }
+      }
+      
+      reqRef.current = requestAnimationFrame(animate);
+    };
+    
+    reqRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(reqRef.current);
+  }, []);
   
   const handleSubmit = () => { 
       const diff = Math.abs(val - target);
-      if (diff < 1) onFinish(10); 
-      else if (diff < 3) onFinish(5); 
+      // More forgiving
+      if (diff < 2.0) onFinish(10); 
+      else if (diff < 4.0) onFinish(5); 
       else onFinish(0); 
   };
 
