@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fenceline — an honest read on your HOA</title>
+<meta name="description" content="Find out how strict, toxic, or chill a homeowners association really is before you sign anything." />
+<style>
+  /* ---------------------------------------------------------------
+     Fenceline — looks like it obeys the HOA design guidelines.
+     Restrained, "greige," tasteful. The chaos is in the content.
+     The one place we spend boldness: the swatch strip rating.
+  --------------------------------------------------------------- */
+  :root {
+    --paper:    #f4f1ea;   /* warm greige paper */
+    --surface:  #fbfaf6;   /* card */
+    --surface-2:#f0ece2;   /* recessed */
+    --ink:      #2a2824;   /* near-black, warm */
+    --ink-soft: #57534a;
+    --muted:    #837d70;   /* captions */
+    --line:     #ddd7c9;   /* hairline borders */
+    --line-2:   #cfc8b8;
+    --accent:   #4d5a4a;   /* muted forest, used sparingly */
+    --focus:    #2f6f8f;
+
+    /* The approved color palette === the rating scale. */
+    --chill:  #7d9b76;
+    --mellow: #c2b06a;
+    --strict: #cf9248;
+    --tense:  #c4603b;
+    --toxic:  #a5392b;
+
+    --mono: ui-monospace, "SF Mono", "SFMono-Regular", "Menlo", "Consolas", monospace;
+    --sans: "Helvetica Neue", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+
+    --maxw: 1080px;
+    --radius: 4px;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Focus visibility — keyboard users must always see where they are. */
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+  a { color: inherit; }
+
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 20px; }
+
+  /* ---- Masthead ------------------------------------------------ */
+  header.masthead {
+    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+    position: sticky; top: 0; z-index: 20;
+  }
+  .masthead-inner {
+    display: flex; align-items: center; gap: 16px;
+    padding: 14px 20px; max-width: var(--maxw); margin: 0 auto;
+  }
+  .brand {
+    display: flex; align-items: baseline; gap: 10px;
+    cursor: pointer; background: none; border: 0; padding: 0; font: inherit; color: inherit;
+  }
+  .brand .mark {
+    font-family: var(--mono);
+    font-size: 13px; letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink);
+    border: 1px solid var(--line-2);
+    padding: 4px 8px; border-radius: 3px;
+    background: var(--surface);
+  }
+  .brand .name { font-weight: 600; font-size: 18px; letter-spacing: -0.01em; }
+  .brand .tag  { color: var(--muted); font-size: 13px; }
+  .masthead-spacer { flex: 1; }
+  .demo-pill {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em;
+    color: var(--muted); border: 1px dashed var(--line-2);
+    padding: 3px 8px; border-radius: 999px; white-space: nowrap;
+  }
+
+  /* ---- Hero / search ------------------------------------------- */
+  .hero { padding: 40px 0 22px; }
+  .hero h1 {
+    font-size: clamp(24px, 4.2vw, 38px);
+    line-height: 1.12; letter-spacing: -0.02em; margin: 0 0 10px;
+    max-width: 18ch;
+  }
+  .hero p.lede { margin: 0 0 22px; color: var(--ink-soft); max-width: 56ch; font-size: 17px; }
+
+  .searchbar { position: relative; max-width: 520px; }
+  .searchbar input {
+    width: 100%; font: inherit; font-size: 16px;
+    padding: 13px 14px 13px 40px;
+    border: 1px solid var(--line-2); border-radius: var(--radius);
+    background: var(--surface); color: var(--ink);
+  }
+  .searchbar input::placeholder { color: var(--muted); }
+  .searchbar .ico {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    color: var(--muted); pointer-events: none;
+  }
+
+  /* ---- The legend: the swatch scale ---------------------------- */
+  .legend {
+    margin: 22px 0 4px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
+  }
+  .legend .strip { display: flex; border: 1px solid var(--line-2); border-radius: 3px; overflow: hidden; }
+  .legend .chip {
+    width: 34px; height: 22px; position: relative;
+  }
+  .legend .label { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.03em; }
+  .legend .ends { display: flex; gap: 6px; font-family: var(--mono); font-size: 11px; color: var(--ink-soft); }
+
+  /* ---- Toolbar: count + sort ----------------------------------- */
+  .toolbar {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    margin: 26px 0 14px;
+  }
+  .toolbar .count { font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: 0.03em; }
+  .toolbar-spacer { flex: 1; }
+  .sortwrap { display: flex; align-items: center; gap: 8px; }
+  .sortwrap label { font-size: 13px; color: var(--muted); }
+  select.sort {
+    font: inherit; font-size: 14px; padding: 7px 10px;
+    border: 1px solid var(--line-2); border-radius: var(--radius);
+    background: var(--surface); color: var(--ink);
+  }
+
+  /* ---- Directory grid ------------------------------------------ */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; padding-bottom: 56px; }
+
+  .card {
+    text-align: left; width: 100%;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 0; cursor: pointer;
+    font: inherit; color: inherit;
+    display: flex; flex-direction: column; overflow: hidden;
+    transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+  }
+  .card:hover { border-color: var(--line-2); box-shadow: 0 1px 0 var(--line-2); }
+  .card:hover { transform: translateY(-1px); }
+  .card .swatch-strip { display: flex; height: 8px; }
+  .card .swatch-strip i { flex: 1; }
+
+  .card-body { padding: 16px 16px 14px; display: flex; flex-direction: column; gap: 10px; }
+  .card .topline { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .card h3 { margin: 0; font-size: 17px; letter-spacing: -0.01em; line-height: 1.2; }
+  .card .loc { color: var(--muted); font-size: 13px; margin-top: 2px; }
+
+  .tier-tag {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em;
+    padding: 3px 7px; border-radius: 3px; white-space: nowrap;
+    border: 1px solid transparent; text-transform: uppercase;
+  }
+  .card .blurb { color: var(--ink-soft); font-size: 14px; line-height: 1.45; margin: 0; }
+
+  /* citation-style data row */
+  .datarow {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+    border-top: 1px solid var(--line); padding-top: 12px; margin-top: 2px;
+  }
+  .datarow .cell { display: flex; flex-direction: column; gap: 2px; }
+  .datarow .v { font-family: var(--mono); font-size: 14px; color: var(--ink); font-weight: 500; }
+  .datarow .k { font-size: 10.5px; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+
+  .flags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .flag {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.02em;
+    color: #7c3a18; background: #f3e2cf; border: 1px solid #e4c9a6;
+    padding: 2px 7px; border-radius: 3px; white-space: nowrap;
+  }
+
+  /* ---- Detail view --------------------------------------------- */
+  .detail { padding: 24px 0 64px; display: none; }
+  .detail.active { display: block; }
+  .directory.hidden { display: none; }
+
+  .backbtn {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: none; border: 0; font: inherit; font-size: 14px; color: var(--ink-soft);
+    cursor: pointer; padding: 6px 2px; margin-bottom: 14px;
+  }
+  .backbtn:hover { color: var(--ink); }
+
+  .detail-head { display: flex; flex-wrap: wrap; gap: 20px 32px; align-items: flex-start; justify-content: space-between; }
+  .detail-head h2 { margin: 0 0 4px; font-size: clamp(22px, 3.4vw, 30px); letter-spacing: -0.02em; }
+  .detail-head .loc { color: var(--muted); font-size: 14px; }
+  .detail-head .meta { color: var(--muted); font-size: 13px; font-family: var(--mono); margin-top: 6px; }
+
+  /* big swatch panel */
+  .swatch-panel {
+    border: 1px solid var(--line-2); border-radius: var(--radius);
+    background: var(--surface); overflow: hidden; min-width: 280px;
+  }
+  .swatch-panel .row { display: flex; }
+  .swatch-panel .col {
+    flex: 1; padding: 10px 6px 9px; text-align: center; position: relative;
+    border-right: 1px solid rgba(0,0,0,0.06);
+  }
+  .swatch-panel .col:last-child { border-right: 0; }
+  .swatch-panel .col .dot { height: 26px; border-radius: 2px; margin-bottom: 7px; }
+  .swatch-panel .col .nm { font-family: var(--mono); font-size: 10px; letter-spacing: 0.02em; color: var(--ink-soft); }
+  .swatch-panel .col.is-active { background: var(--surface-2); }
+  .swatch-panel .col.is-active .nm { color: var(--ink); font-weight: 600; }
+  .swatch-panel .col .pin {
+    position: absolute; top: 4px; left: 50%; transform: translateX(-50%);
+    font-family: var(--mono); font-size: 9px; color: var(--ink);
+  }
+  .swatch-panel .caption {
+    border-top: 1px solid var(--line); padding: 9px 12px;
+    font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.02em;
+    display:flex; justify-content: space-between; gap: 10px;
+  }
+
+  /* Two-axis honest read: strictness vs. toxicity */
+  .axes { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 22px 0 4px; }
+  .axis {
+    border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+    padding: 13px 14px;
+  }
+  .axis .axhead { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 9px; }
+  .axis .axname { font-size: 13px; font-weight: 600; }
+  .axis .axval { font-family: var(--mono); font-size: 12px; color: var(--ink-soft); }
+  .meter { height: 7px; background: var(--surface-2); border-radius: 999px; overflow: hidden; border: 1px solid var(--line); }
+  .meter > span { display: block; height: 100%; border-radius: 999px; }
+  .axis .axnote { font-size: 12px; color: var(--muted); margin-top: 9px; line-height: 1.4; }
+
+  .section { margin-top: 34px; }
+  .section > h3 {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--muted); margin: 0 0 14px; font-weight: 600;
+    border-bottom: 1px solid var(--line); padding-bottom: 8px;
+  }
+
+  /* citation data block in detail */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .stat {
+    background: var(--surface); padding: 14px 14px;
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .stat .v { font-family: var(--mono); font-size: 19px; color: var(--ink); }
+  .stat .k { font-size: 11px; color: var(--muted); letter-spacing: 0.03em; text-transform: uppercase; }
+  .stat .sub { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+
+  /* "Will I get fined for ___?" lookup */
+  .fined { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 10px; }
+  .fined .item {
+    border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+    padding: 11px 12px; display: flex; align-items: flex-start; gap: 10px;
+  }
+  .fined .verdict {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase;
+    padding: 3px 6px; border-radius: 3px; white-space: nowrap; margin-top: 1px; border: 1px solid transparent;
+  }
+  .v-allowed     { color: #2f5e34; background: #e2efe1; border-color: #c4ddc2; }
+  .v-conditional { color: #7c5a16; background: #f3ebd3; border-color: #e2d4a8; }
+  .v-banned      { color: #8a2c20; background: #f3dcd8; border-color: #e3bbb3; }
+  .fined .q { font-size: 13.5px; font-weight: 600; line-height: 1.25; }
+  .fined .note { font-size: 12.5px; color: var(--ink-soft); margin-top: 2px; line-height: 1.4; }
+
+  /* review distribution histogram */
+  .dist { display: flex; align-items: flex-end; gap: 8px; height: 96px; padding: 4px 2px 0; }
+  .dist .bar { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+  .dist .bar .fill { width: 100%; border-radius: 2px 2px 0 0; min-height: 2px; }
+  .dist .bar .n { font-family: var(--mono); font-size: 11px; color: var(--ink-soft); }
+  .dist .bar .lbl { font-family: var(--mono); font-size: 9.5px; color: var(--muted); letter-spacing: 0.02em; }
+  .dist-note { font-size: 12px; color: var(--muted); margin-top: 10px; }
+
+  /* reviews */
+  .reviews { display: flex; flex-direction: column; gap: 14px; }
+  .review { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); padding: 14px 15px; }
+  .review .rhead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .review .swatch-dot { width: 13px; height: 13px; border-radius: 2px; border: 1px solid rgba(0,0,0,0.12); flex: none; }
+  .review .who { font-size: 13px; font-weight: 600; }
+  .review .verified {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.03em; color: #2f5e34;
+    background: #e2efe1; border: 1px solid #c4ddc2; padding: 1px 6px; border-radius: 3px;
+  }
+  .review .when { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-left: auto; }
+  .review .body { font-size: 14px; color: var(--ink); line-height: 1.5; }
+  .review .tier-mini { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+
+  /* post review form */
+  .form { border: 1px solid var(--line-2); border-radius: var(--radius); background: var(--surface); padding: 16px; }
+  .form .field { margin-bottom: 14px; }
+  .form label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 7px; }
+  .form .hint { font-weight: 400; color: var(--muted); font-size: 12px; }
+  .swatch-pick { display: flex; gap: 6px; }
+  .swatch-pick button {
+    flex: 1; border: 1px solid var(--line-2); background: var(--surface); border-radius: 3px;
+    padding: 0; cursor: pointer; overflow: hidden; font: inherit;
+  }
+  .swatch-pick button .sw { height: 26px; display: block; }
+  .swatch-pick button .nm { font-family: var(--mono); font-size: 10px; color: var(--muted); padding: 5px 2px; display: block; letter-spacing: 0.02em; }
+  .swatch-pick button[aria-pressed="true"] { border-color: var(--ink); }
+  .swatch-pick button[aria-pressed="true"] .nm { color: var(--ink); font-weight: 600; }
+  .form textarea, .form input[type="text"] {
+    width: 100%; font: inherit; font-size: 14px; padding: 10px 11px;
+    border: 1px solid var(--line-2); border-radius: var(--radius); background: var(--paper); color: var(--ink); resize: vertical;
+  }
+  .form textarea { min-height: 84px; }
+  .form .checkrow { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-soft); }
+  .form .actions { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+  .btn {
+    font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+    border: 1px solid var(--accent); background: var(--accent); color: #f5f4ee;
+    padding: 9px 16px; border-radius: var(--radius);
+  }
+  .btn:hover { background: #3e4a3c; }
+  .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+  .btn.ghost { background: transparent; color: var(--ink-soft); border-color: var(--line-2); }
+  .btn.ghost:hover { background: var(--surface-2); }
+  .form .err { color: var(--toxic); font-size: 13px; }
+
+  /* empty state */
+  .empty {
+    border: 1px dashed var(--line-2); border-radius: var(--radius);
+    padding: 40px 24px; text-align: center; color: var(--muted); background: var(--surface);
+  }
+  .empty strong { color: var(--ink-soft); display: block; margin-bottom: 6px; font-size: 15px; }
+
+  footer.foot {
+    border-top: 1px solid var(--line); margin-top: 24px;
+    padding: 22px 0 40px; color: var(--muted); font-size: 12.5px;
+  }
+  footer.foot .wrap { display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: space-between; }
+  footer.foot a { color: var(--ink-soft); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  /* disclosure dialog */
+  dialog.sheet {
+    border: 1px solid var(--line-2); border-radius: 6px; padding: 0; max-width: 540px; width: 92%;
+    color: var(--ink); background: var(--surface);
+  }
+  dialog.sheet::backdrop { background: rgba(30,28,24,0.4); }
+  dialog.sheet .dhead { padding: 16px 18px; border-bottom: 1px solid var(--line); display:flex; justify-content: space-between; align-items: center; }
+  dialog.sheet .dhead h4 { margin: 0; font-size: 15px; }
+  dialog.sheet .dbody { padding: 16px 18px; font-size: 14px; line-height: 1.55; color: var(--ink-soft); }
+  dialog.sheet .dbody p { margin: 0 0 12px; }
+  dialog.sheet .x { background: none; border: 0; font-size: 18px; cursor: pointer; color: var(--muted); line-height: 1; }
+
+  @media (max-width: 620px) {
+    .masthead-inner { padding: 12px 16px; gap: 10px; }
+    .brand .tag { display: none; }            /* keep the masthead to one tidy line */
+    .demo-pill { font-size: 10px; padding: 3px 7px; }
+  }
+  @media (max-width: 560px) {
+    .wrap { padding: 0 16px; }
+    .datarow { grid-template-columns: repeat(2, 1fr); row-gap: 12px; }
+    .axes { grid-template-columns: 1fr; }
+    .hero { padding: 28px 0 18px; }
+    .detail-head { gap: 16px; }
+    .swatch-panel { min-width: 0; width: 100%; }
+  }
+  @media (max-width: 380px) {
+    .demo-pill { display: none; }             /* truly tiny screens: brand only */
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+    .card:hover { transform: none; }
+  }
+</style>
+</head>
+<body>
+<a class="sr-only" href="#main">Skip to content</a>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <button class="brand" id="brandBtn" aria-label="Fenceline home">
+      <span class="mark">FL</span>
+      <span class="name">Fenceline</span>
+      <span class="tag">an honest read on your HOA</span>
+    </button>
+    <span class="masthead-spacer"></span>
+    <span class="demo-pill" title="All communities and residents on Fenceline are fictional demo data.">demo data · fictional HOAs</span>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+
+  <!-- ============ DIRECTORY ============ -->
+  <section class="directory" id="directory" aria-label="HOA directory">
+    <div class="hero">
+      <h1>Know the board before you sign the deed.</h1>
+      <p class="lede">Fenceline tells you how strict, how toxic, or how chill a homeowners association
+        really is — from the people already living under it. No happiness scores. Just the rulebook,
+        the fines, and what your neighbors wish they'd known.</p>
+
+      <div class="searchbar">
+        <svg class="ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path>
+        </svg>
+        <input id="search" type="search" placeholder="Search by community or city…" autocomplete="off"
+               aria-label="Search communities" />
+      </div>
+
+      <div class="legend" aria-hidden="true">
+        <div class="strip" id="legendStrip"></div>
+        <div class="ends"><span>← more chill</span><span>more toxic →</span></div>
+        <span class="label">the approved palette · click any community for the full read</span>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <span class="count" id="count"></span>
+      <span class="toolbar-spacer"></span>
+      <div class="sortwrap">
+        <label for="sort">Sort</label>
+        <select class="sort" id="sort">
+          <option value="vibe">Vibe (chill → toxic)</option>
+          <option value="dues">Monthly dues</option>
+          <option value="rules">Rule count</option>
+          <option value="fine">Avg. fine</option>
+          <option value="response">Board response time</option>
+          <option value="reviews">Most reviewed</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+    <div id="emptyDir" class="empty" hidden>
+      <strong>No communities match that search.</strong>
+      Try a city or a community name — or clear the box to see all of them.
+    </div>
+  </section>
+
+  <!-- ============ DETAIL ============ -->
+  <section class="detail" id="detail" aria-label="Community detail" tabindex="-1"></section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span>Fenceline · a prototype. Every community, resident, and review here is invented for demonstration.</span>
+    <span><a id="howScore">How the vibe score works</a></span>
+  </div>
+</footer>
+
+<dialog class="sheet" id="scoreSheet" aria-labelledby="scoreTitle">
+  <div class="dhead">
+    <h4 id="scoreTitle">How the vibe score works</h4>
+    <button class="x" id="scoreClose" aria-label="Close">×</button>
+  </div>
+  <div class="dbody">
+    <p>An HOA isn't simply <em>good</em> or <em>bad</em>. Fenceline reads two different things and keeps
+      them separate:</p>
+    <p><strong>Strictness</strong> — how much the rulebook governs your day-to-day: rule count, the size
+      of typical fines, and how little discretion the covenants leave you.</p>
+    <p><strong>Toxicity</strong> — how the board <em>treats people</em>: response times, selective
+      enforcement, and the tone residents describe in their reviews.</p>
+    <p>The single swatch — <strong>Chill → Mellow → Strict → Tense → Toxic</strong> — is a blend of both,
+      so a strict-but-fair board lands lower than a strict-and-cruel one. The detail page always shows
+      the two axes on their own so you can judge for yourself.</p>
+    <p style="color:var(--muted)">This is a prototype. Scores are illustrative and built from fictional
+      demo reviews — not real associations.</p>
+  </div>
+</dialog>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---- The approved palette === the rating scale ----------------
+  var TIERS = [
+    { key: "chill",  name: "Chill",  color: "#7d9b76" },
+    { key: "mellow", name: "Mellow", color: "#c2b06a" },
+    { key: "strict", name: "Strict", color: "#cf9248" },
+    { key: "tense",  name: "Tense",  color: "#c4603b" },
+    { key: "toxic",  name: "Toxic",  color: "#a5392b" }
+  ];
+  function tier(i) { return TIERS[Math.max(0, Math.min(4, i))]; }
+
+  // Pale background + readable text for a tier tag.
+  var TIER_TAG = {
+    chill:  { bg:"#e3ece1", fg:"#3a5a39", bd:"#c7dcc4" },
+    mellow: { bg:"#f1ecd2", fg:"#6f6011", bd:"#e0d6a6" },
+    strict: { bg:"#f4e6d2", fg:"#8a5a1c", bd:"#e6cfa9" },
+    tense:  { bg:"#f4ddd2", fg:"#9a4324", bd:"#e7c1ad" },
+    toxic:  { bg:"#f2d8d3", fg:"#8c2c20", bd:"#e3b5ac" }
+  };
+
+  // ---------------------------------------------------------------
+  //  Seed data — fictional communities, each with a personality.
+  //  Strictness & toxicity are 0–100. The single "vibe" tier is a
+  //  blend, authored to match the reviews.
+  // ---------------------------------------------------------------
+  var SEED = [
+    {
+      id: "cypress-bend",
+      name: "Cypress Bend",
+      location: "Asheville outskirts, NC",
+      vibe: 0,
+      strictness: 22, toxicity: 14,
+      dues: 48, rules: 19, avgFine: 25, responseWeeks: 1, homes: 84, founded: 2009,
+      blurb: "A volunteer board that mostly leaves you alone. The CC&Rs exist; nobody seems to have read them lately.",
+      fined: [
+        { q: "Backyard chickens", verdict: "conditional", note: "Up to 6 hens, no roosters. A neighbor's coop has been there for years." },
+        { q: "RV / boat parking", verdict: "conditional", note: "Fine on your driveway for up to 72 hours; longer needs a quick email." },
+        { q: "Exterior paint color", verdict: "conditional", note: "Stay in earth tones and nobody asks questions." },
+        { q: "Political / yard signs", verdict: "allowed", note: "No restriction on the books." },
+        { q: "Short-term rental", verdict: "conditional", note: "Allowed with a $40/yr permit; two homes do it openly." },
+        { q: "Solar panels", verdict: "allowed", note: "Encouraged, actually — board added a fast-track in 2021." }
+      ],
+      reviews: [
+        { author: "Renter, 2 yrs", verified: true, tier: 0, date: "2026-03-11", text: "Put a kayak rack on the side of the house and braced for a letter. Nothing came. The 'board' is basically Dwayne, who waved at me while I drilled into the siding." },
+        { author: "Owner since 2018", verified: true, tier: 1, date: "2025-11-02", text: "Dues went up $6 last year to repave the cul-de-sac and that was the whole drama. Annual meeting had donuts and ran twenty minutes." },
+        { author: "New owner", verified: false, tier: 0, date: "2026-01-20", text: "Asked about a fence height and got a one-line reply the same afternoon: 'six feet, go for it.' Refreshing after the last place." }
+      ]
+    },
+    {
+      id: "larkspur-commons",
+      name: "Larkspur Commons",
+      location: "Boise, ID",
+      vibe: 1,
+      strictness: 41, toxicity: 24,
+      dues: 95, rules: 34, avgFine: 60, responseWeeks: 2, homes: 162, founded: 2014,
+      blurb: "Tidy and reasonable. There's a rulebook and they enforce it, but warnings come before fines and people pick up the phone.",
+      fined: [
+        { q: "Basketball hoop", verdict: "conditional", note: "Portable hoops OK; must be pulled back from the curb on trash days." },
+        { q: "Holiday lights", verdict: "conditional", note: "Up through Jan 15. A gentle reminder, not a fine, if they linger." },
+        { q: "Fence height", verdict: "conditional", note: "Six feet rear, four feet street-facing. Approval is a form, usually back in a week." },
+        { q: "Clothesline", verdict: "allowed", note: "Permitted in rear yards (state solar-rights law)." },
+        { q: "Short-term rental", verdict: "banned", note: "30-day minimum lease. This one they do enforce." },
+        { q: "Exterior paint color", verdict: "conditional", note: "Pick from a 28-color approved palette; off-palette needs a vote." }
+      ],
+      reviews: [
+        { author: "Owner since 2016", verified: true, tier: 1, date: "2026-02-18", text: "Got a warning that my trash can was out a day early. Annoying, but it was a postcard, not a fine, and the woman who runs ARC actually apologized for the wording." },
+        { author: "Owner", verified: true, tier: 0, date: "2025-12-09", text: "Storm-door request approved in five days. They asked me to match the trim color and that was it. Felt fair." },
+        { author: "Renter", verified: false, tier: 2, date: "2026-04-01", text: "Lost a star because the 30-day rental rule killed my plan to Airbnb the basement. Rules are clear though — I just didn't read them." }
+      ]
+    },
+    {
+      id: "heron-walk",
+      name: "Heron's Walk",
+      location: "Savannah, GA",
+      vibe: 1,
+      strictness: 47, toxicity: 31,
+      dues: 120, rules: 41, avgFine: 75, responseWeeks: 2, homes: 210, founded: 2011,
+      blurb: "A polished, leafy community with real amenities. The trade-off is a board that likes its standards — fair, but never casual.",
+      fined: [
+        { q: "Backyard chickens", verdict: "banned", note: "No livestock or poultry of any kind." },
+        { q: "Boat / RV parking", verdict: "banned", note: "Not in driveways or streets; there's a paid off-site lot." },
+        { q: "Holiday lights", verdict: "conditional", note: "White lights only, down by Jan 10." },
+        { q: "Vegetable garden (front)", verdict: "conditional", note: "Allowed if bordered and 'tidy'; the definition has caused arguments." },
+        { q: "Solar panels", verdict: "conditional", note: "Permitted but must be roof-plane and not street-visible where feasible." },
+        { q: "Political / yard signs", verdict: "conditional", note: "One sign, 45 days around an election, removed within 3 days after." }
+      ],
+      reviews: [
+        { author: "Owner since 2015", verified: true, tier: 1, date: "2026-01-29", text: "They run a tight ship and the common areas show it — the pond and trails are genuinely beautiful. You just have to accept that 'tidy' is a board decision, not yours." },
+        { author: "Owner", verified: true, tier: 2, date: "2025-10-14", text: "Three weeks to approve a white storm door. White. The most allowed color there is. It came back approved with a note reminding me approval was 'a courtesy.'" },
+        { author: "Renter, 1 yr", verified: false, tier: 1, date: "2026-03-22", text: "Friendly neighbors, strict-ish board. Got one notice about a garden hose left coiled on the porch. Fixed it, no fine. Could be worse." }
+      ]
+    },
+    {
+      id: "wexford-pointe",
+      name: "Wexford Pointe",
+      location: "Plano, TX",
+      vibe: 2,
+      strictness: 78, toxicity: 38,
+      dues: 165, rules: 96, avgFine: 110, responseWeeks: 3, homes: 340, founded: 2007,
+      blurb: "Extremely strict, surprisingly fair. The rulebook is the size of a phone book, but enforcement is even-handed and the appeals process actually works.",
+      fined: [
+        { q: "Exterior paint color", verdict: "conditional", note: "Choose from the approved deck only; the 'wrong brown' is a real and frequent rejection." },
+        { q: "Basketball hoop", verdict: "banned", note: "No permanent or portable hoops visible from the street. Indoor garage use only." },
+        { q: "Fence height", verdict: "conditional", note: "Strict 6-ft spec, board-approved stain, posts facing in. Plans required." },
+        { q: "Trash can storage", verdict: "conditional", note: "Out no earlier than 6pm prior, in by 8pm day-of. Most-fined rule in the community." },
+        { q: "Flagpole", verdict: "conditional", note: "One ground pole ≤20ft, US/state/military flags; HOA flag needs approval." },
+        { q: "Short-term rental", verdict: "banned", note: "6-month minimum lease, strictly enforced with estoppel checks." }
+      ],
+      reviews: [
+        { author: "Owner since 2012", verified: true, tier: 2, date: "2026-02-02", text: "Ninety-six rules and I've read all of them, because they will cite the number. But here's the thing: they cite everyone the same. My neighbor the board VP got the same trash-can fine I did. I respect that." },
+        { author: "Owner", verified: true, tier: 3, date: "2025-09-19", text: "Used the 'wrong brown' mulch and got a violation with a photo and a paint-chip reference code. Appealed it, brought the receipt, and they actually reversed it. Tedious but honest." },
+        { author: "Owner since 2019", verified: true, tier: 2, date: "2026-04-10", text: "$50 because the cans were visible from the street forty minutes past pickup. Brutal rule, but it's printed in 14-point font in the welcome packet. No surprises here, just a lot of rules." },
+        { author: "Renter", verified: false, tier: 2, date: "2026-05-03", text: "If you like knowing exactly where you stand, you'll be fine. If you want to freestyle your front yard, run." }
+      ]
+    },
+    {
+      id: "saddleback-ridge",
+      name: "Saddleback Ridge",
+      location: "Scottsdale, AZ",
+      vibe: 3,
+      strictness: 71, toxicity: 64,
+      dues: 210, rules: 88, avgFine: 165, responseWeeks: 5, homes: 290, founded: 2006,
+      blurb: "Strict and getting personal. The current board enforces selectively and the response times have slipped. Beautiful desert setting, tense HOA.",
+      fined: [
+        { q: "Desert landscaping change", verdict: "conditional", note: "Must use the approved plant list; gravel color is specified by the foot." },
+        { q: "Backyard chickens", verdict: "banned", note: "No poultry. A cited owner is in ongoing dispute with the board." },
+        { q: "Solar panels", verdict: "conditional", note: "Legally allowed, but approval has stalled 8+ weeks for some owners." },
+        { q: "RV / boat parking", verdict: "banned", note: "Zero tolerance; towing has happened within 24 hours." },
+        { q: "Holiday lights", verdict: "conditional", note: "Down by Jan 5; late removal fines are common and steep." },
+        { q: "Political / yard signs", verdict: "conditional", note: "Technically allowed by state law; enforcement has been uneven." }
+      ],
+      reviews: [
+        { author: "Owner since 2013", verified: true, tier: 4, date: "2026-03-30", text: "$200 fine for a saguaro that 'shed onto the common path.' My neighbor's identical cactus, fifteen feet away, never got cited. Ask me which one of us has a friend on the board." },
+        { author: "Owner", verified: true, tier: 3, date: "2026-01-12", text: "Submitted solar plans in November. It's now March. Three emails, no answer, then a denial citing a guideline that isn't in the document they sent me." },
+        { author: "Owner since 2020", verified: true, tier: 4, date: "2025-12-28", text: "The amenities are nice and the views are unreal. But the board has favorites, and if you're not one, every letter has an edge to it." },
+        { author: "Renter", verified: false, tier: 2, date: "2026-04-19", text: "As a renter I'm mostly insulated, but I've watched my landlord get three notices in a year for things the house across the street does openly." }
+      ]
+    },
+    {
+      id: "magnolia-crest",
+      name: "Magnolia Crest",
+      location: "Naples, FL",
+      vibe: 4,
+      strictness: 84, toxicity: 89,
+      dues: 295, rules: 112, avgFine: 240, responseWeeks: 7, homes: 188, founded: 2004,
+      blurb: "The cautionary tale. A combative board, six-figure fine threats, and a community newsletter that reads like a charge sheet. Document everything.",
+      fined: [
+        { q: "Exterior paint color", verdict: "banned", note: "Off-palette repaint triggered a $1,000/day accruing fine for one owner." },
+        { q: "Mailbox style", verdict: "conditional", note: "One approved model, one approved post. Replacements inspected." },
+        { q: "Backyard chickens", verdict: "banned", note: "Banned; the board has threatened liens over far less." },
+        { q: "Short-term rental", verdict: "banned", note: "Banned and pursued aggressively, including private-investigator claims." },
+        { q: "Pressure-washing schedule", verdict: "conditional", note: "Driveways must be cleaned 'as directed'; non-compliance letters are routine." },
+        { q: "Flagpole", verdict: "conditional", note: "Allowed by statute, but applications have been denied on technicalities." }
+      ],
+      reviews: [
+        { author: "Owner since 2017", verified: true, tier: 4, date: "2026-05-21", text: "They put a lien on a unit over $410 in disputed fines that started as a single late trash-can notice. The legal fees added up to more than the fine. That's the strategy." },
+        { author: "Owner", verified: true, tier: 4, date: "2026-02-07", text: "The monthly newsletter literally lists addresses and violations like a perp walk. I've seen grown neighbors cry at meetings. Avoid unless you enjoy litigation." },
+        { author: "Former owner", verified: true, tier: 4, date: "2025-11-30", text: "Sold at a loss partly to get out. The disclosure packet alone — fines, special assessments, pending suits — should be a warning label." },
+        { author: "Owner since 2021", verified: true, tier: 3, date: "2026-04-25", text: "To be fair, the landscaping is immaculate and my unit holds value. But the cost is a board that treats neighbors like defendants. I keep every email." },
+        { author: "Renter", verified: false, tier: 4, date: "2026-06-08", text: "My lease has an HOA-rules addendum longer than the lease itself. Got a personal warning for parking in my own assigned spot 'crookedly.'" }
+      ]
+    },
+    {
+      id: "tanager-heights",
+      name: "Tanager Heights",
+      location: "Portland, OR",
+      vibe: 2,
+      strictness: 58, toxicity: 52,
+      dues: 140, rules: 63, avgFine: 95, responseWeeks: 3, homes: 124, founded: 2015,
+      blurb: "A genuinely divided board — half want a relaxed neighborhood, half want order. Your experience depends heavily on who answers your request.",
+      fined: [
+        { q: "Vegetable garden (front)", verdict: "conditional", note: "Two board members champion it, two oppose it. Approvals are a coin flip." },
+        { q: "Backyard chickens", verdict: "conditional", note: "Recently allowed by a 3–2 vote; still contested at every meeting." },
+        { q: "Fence height", verdict: "conditional", note: "Six feet, but the 'design compatibility' clause is interpreted differently each time." },
+        { q: "Short-term rental", verdict: "conditional", note: "Capped at 10% of homes; waitlist is contentious." },
+        { q: "Solar panels", verdict: "allowed", note: "One area of genuine consensus — fast approvals." },
+        { q: "Political / yard signs", verdict: "allowed", note: "Protected; no real dispute here." }
+      ],
+      reviews: [
+        { author: "Owner since 2017", verified: true, tier: 1, date: "2026-03-05", text: "Honestly? Depends who you get. The reform slate approved my chicken coop in a week and sent a welcome note. The old guard would've fought it for a year." },
+        { author: "Owner", verified: true, tier: 3, date: "2025-12-15", text: "My identical fence request got denied while my neighbor's sailed through — different month, different board majority. The inconsistency is maddening." },
+        { author: "Owner since 2019", verified: true, tier: 2, date: "2026-04-28", text: "Meetings are a tug-of-war and it shows in the rulebook, which contradicts itself in a couple of spots. If you like a little chaos with your democracy, you'll feel at home." },
+        { author: "Renter", verified: false, tier: 2, date: "2026-05-30", text: "The vibe swings hard depending on the month. Read the recent meeting minutes before you judge this place by any one review — including mine." }
+      ]
+    },
+    {
+      id: "stonegate-manor",
+      name: "Stonegate Manor",
+      location: "Naperville, IL",
+      vibe: 2,
+      strictness: 69, toxicity: 44,
+      dues: 178, rules: 81, avgFine: 120, responseWeeks: 3, homes: 256, founded: 2008,
+      blurb: "Buttoned-up and process-driven. Lots of rules and real fines, but everything runs through a clear, slow, paper trail — bureaucratic more than cruel.",
+      fined: [
+        { q: "Basketball hoop", verdict: "conditional", note: "Portable only, stored out of view when not in use. Cited if left at curb overnight." },
+        { q: "Storm door", verdict: "conditional", note: "Full-view only, frame must match trim; 2–3 week approval is typical." },
+        { q: "Fence height", verdict: "conditional", note: "Six feet, board-approved materials, surveyed setback. Plans + fee required." },
+        { q: "Trash can storage", verdict: "conditional", note: "Out after 5pm prior day, in by 9pm. Warnings before fines." },
+        { q: "Holiday lights", verdict: "conditional", note: "Nov 20–Jan 10 window; enforced but with a grace email." },
+        { q: "Short-term rental", verdict: "banned", note: "12-month minimum lease, verified at closing." }
+      ],
+      reviews: [
+        { author: "Owner since 2014", verified: true, tier: 2, date: "2026-02-25", text: "It's a lot of forms. Everything is a form. But I've never felt singled out — when I'm cited, so is everyone else doing the same thing, and there's always a paper appeal." },
+        { author: "Owner", verified: true, tier: 2, date: "2025-11-18", text: "Three weeks to approve a storm door felt absurd, but the letter was polite and the spec was clear. Slow machine, not a mean one." },
+        { author: "Owner since 2021", verified: false, tier: 1, date: "2026-04-14", text: "If you're an organized person who keeps receipts, this place is fine. If you hate paperwork, the dues-and-forms grind will wear you down." }
+      ]
+    }
+  ];
+
+  // ---- localStorage: user reviews survive a reload --------------
+  var LS_KEY = "fenceline.reviews.v1";
+  function loadUserReviews() {
+    try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; }
+    catch (e) { return {}; }
+  }
+  function saveUserReviews(map) {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(map)); } catch (e) {}
+  }
+  var userReviews = loadUserReviews();
+
+  function allReviews(c) {
+    var extra = userReviews[c.id] || [];
+    return extra.concat(c.reviews);
+  }
+
+  // ---- helpers --------------------------------------------------
+  function el(tag, attrs, kids) {
+    var n = document.createElement(tag);
+    if (attrs) for (var k in attrs) {
+      if (k === "class") n.className = attrs[k];
+      else if (k === "html") n.innerHTML = attrs[k];
+      else if (k === "text") n.textContent = attrs[k];
+      else if (k.slice(0,2) === "on" && typeof attrs[k] === "function") n.addEventListener(k.slice(2), attrs[k]);
+      else if (attrs[k] != null) n.setAttribute(k, attrs[k]);
+    }
+    if (kids) (Array.isArray(kids) ? kids : [kids]).forEach(function (c) {
+      if (c == null) return;
+      n.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+    });
+    return n;
+  }
+  function money(n) { return "$" + n; }
+  function fmtDate(iso) {
+    var d = new Date(iso + "T00:00:00");
+    if (isNaN(d)) return iso;
+    return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  }
+  // Derived warning tags, surfaced prominently.
+  function redFlags(c) {
+    var f = [];
+    if (c.rules > 90) f.push(c.rules + " rules");
+    if (c.avgFine >= 150) f.push("avg fine " + money(c.avgFine));
+    if (c.responseWeeks >= 4) f.push(c.responseWeeks + "-wk board response");
+    if (c.toxicity >= 75) f.push("selective enforcement");
+    return f;
+  }
+
+  // ---- swatch widgets -------------------------------------------
+  function buildLegend() {
+    var strip = document.getElementById("legendStrip");
+    TIERS.forEach(function (t) {
+      strip.appendChild(el("span", { class: "chip", style: "background:" + t.color, title: t.name }));
+    });
+  }
+
+  // ---- directory ------------------------------------------------
+  var grid = document.getElementById("grid");
+  var searchInput = document.getElementById("search");
+  var sortSelect = document.getElementById("sort");
+  var countEl = document.getElementById("count");
+  var emptyDir = document.getElementById("emptyDir");
+
+  var state = { q: "", sort: "vibe" };
+
+  function sortComparators(key) {
+    return ({
+      vibe:     function (a, b) { return a.vibe - b.vibe || a.toxicity - b.toxicity; },
+      dues:     function (a, b) { return b.dues - a.dues; },
+      rules:    function (a, b) { return b.rules - a.rules; },
+      fine:     function (a, b) { return b.avgFine - a.avgFine; },
+      response: function (a, b) { return b.responseWeeks - a.responseWeeks; },
+      reviews:  function (a, b) { return allReviews(b).length - allReviews(a).length; }
+    })[key];
+  }
+
+  function filtered() {
+    var q = state.q.trim().toLowerCase();
+    var list = SEED.filter(function (c) {
+      if (!q) return true;
+      return (c.name + " " + c.location + " " + c.blurb).toLowerCase().indexOf(q) >= 0;
+    });
+    list.sort(sortComparators(state.sort));
+    return list;
+  }
+
+  function card(c) {
+    var t = tier(c.vibe), tg = TIER_TAG[t.key];
+    var strip = el("div", { class: "swatch-strip", "aria-hidden": "true" },
+      TIERS.map(function (tt, i) {
+        return el("i", { style: "background:" + tt.color + (i === c.vibe ? "" : ";opacity:.30") });
+      })
+    );
+    var flags = redFlags(c);
+    var node = el("button", {
+      class: "card", type: "button",
+      "aria-label": c.name + " in " + c.location + " — rated " + t.name,
+      onclick: function () { openDetail(c.id); }
+    }, [
+      strip,
+      el("div", { class: "card-body" }, [
+        el("div", { class: "topline" }, [
+          el("div", {}, [
+            el("h3", { text: c.name }),
+            el("div", { class: "loc", text: c.location })
+          ]),
+          el("span", {
+            class: "tier-tag",
+            style: "background:" + tg.bg + ";color:" + tg.fg + ";border-color:" + tg.bd,
+            text: t.name
+          })
+        ]),
+        el("p", { class: "blurb", text: c.blurb }),
+        flags.length ? el("div", { class: "flags" }, flags.map(function (f) {
+          return el("span", { class: "flag", text: "⚑ " + f });
+        })) : null,
+        el("div", { class: "datarow" }, [
+          dcell(money(c.dues), "Dues / mo"),
+          dcell(String(c.rules), "Rules"),
+          dcell(money(c.avgFine), "Avg fine"),
+          dcell(c.responseWeeks + "w", "Response")
+        ])
+      ])
+    ]);
+    return node;
+  }
+  function dcell(v, k) {
+    return el("div", { class: "cell" }, [ el("span", { class: "v", text: v }), el("span", { class: "k", text: k }) ]);
+  }
+
+  function renderDirectory() {
+    var list = filtered();
+    grid.innerHTML = "";
+    list.forEach(function (c) { grid.appendChild(card(c)); });
+    countEl.textContent = list.length + (list.length === 1 ? " community" : " communities")
+      + (state.q ? " matching “" + state.q + "”" : " · demo set");
+    emptyDir.hidden = list.length !== 0;
+    grid.style.display = list.length ? "" : "none";
+  }
+
+  // ---- detail ---------------------------------------------------
+  var directorySec = document.getElementById("directory");
+  var detailSec = document.getElementById("detail");
+  var draftTier = null;
+
+  function meterFill(val, color) {
+    return el("div", { class: "meter" }, el("span", { style: "width:" + val + "%;background:" + color }));
+  }
+
+  function distribution(c) {
+    var counts = [0,0,0,0,0];
+    allReviews(c).forEach(function (r) { counts[Math.max(0,Math.min(4, r.tier))]++; });
+    var max = Math.max.apply(null, counts.concat([1]));
+    var total = counts.reduce(function (a,b){return a+b;}, 0);
+    // Detect a divided board: significant mass at both ends.
+    var lowMass = counts[0] + counts[1], highMass = counts[3] + counts[4];
+    var divided = total >= 4 && lowMass >= 1 && highMass >= 1 && Math.min(lowMass, highMass) / total >= 0.25;
+    var bars = el("div", { class: "dist", role: "img",
+      "aria-label": "Review distribution across " + total + " reviews" },
+      TIERS.map(function (t, i) {
+        var h = Math.round((counts[i] / max) * 100);
+        return el("div", { class: "bar" }, [
+          el("span", { class: "n", text: counts[i] ? String(counts[i]) : "" }),
+          el("span", { class: "fill", style: "height:" + h + "%;background:" + t.color + (counts[i] ? "" : ";opacity:.25") }),
+          el("span", { class: "lbl", text: t.name })
+        ]);
+      })
+    );
+    var note = el("p", { class: "dist-note", text: divided
+      ? "A divided board: residents split between calm and combative experiences rather than landing on one verdict. Read widely before you judge."
+      : "Most residents cluster around a consistent read — the average reflects the lived experience here." });
+    return el("div", {}, [bars, note]);
+  }
+
+  function reviewNode(r) {
+    var t = tier(r.tier);
+    return el("article", { class: "review" }, [
+      el("div", { class: "rhead" }, [
+        el("span", { class: "swatch-dot", style: "background:" + t.color, title: t.name }),
+        el("span", { class: "who", text: r.author }),
+        r.verified ? el("span", { class: "verified", text: "✓ verified resident" }) : el("span", { class: "tier-mini", text: "unverified" }),
+        el("span", { class: "when", text: fmtDate(r.date) })
+      ]),
+      el("p", { class: "body", text: r.body || r.text })
+    ]);
+  }
+
+  function finedItem(it) {
+    var cls = "v-" + it.verdict;
+    var label = it.verdict.charAt(0).toUpperCase() + it.verdict.slice(1);
+    return el("div", { class: "item" }, [
+      el("span", { class: "verdict " + cls, text: label }),
+      el("div", {}, [
+        el("div", { class: "q", text: it.q }),
+        el("div", { class: "note", text: it.note })
+      ])
+    ]);
+  }
+
+  function buildDetail(c) {
+    var t = tier(c.vibe);
+    var reviewCount = allReviews(c).length;
+
+    // big swatch panel
+    var swatchRow = el("div", { class: "row" }, TIERS.map(function (tt, i) {
+      return el("div", { class: "col" + (i === c.vibe ? " is-active" : "") }, [
+        i === c.vibe ? el("span", { class: "pin", text: "▼" }) : null,
+        el("div", { class: "dot", style: "background:" + tt.color + (i === c.vibe ? "" : ";opacity:.4") }),
+        el("div", { class: "nm", text: tt.name })
+      ]);
+    }));
+    var swatchPanel = el("div", { class: "swatch-panel" }, [
+      swatchRow,
+      el("div", { class: "caption" }, [
+        el("span", { text: "approved palette · overall vibe" }),
+        el("span", { text: t.name.toUpperCase() })
+      ])
+    ]);
+
+    var flags = redFlags(c);
+
+    var head = el("div", { class: "detail-head" }, [
+      el("div", {}, [
+        el("h2", { text: c.name }),
+        el("div", { class: "loc", text: c.location }),
+        el("div", { class: "meta", text: c.homes + " homes · est. " + c.founded + " · " + reviewCount + " resident reviews" }),
+        flags.length ? el("div", { class: "flags", style: "margin-top:12px" }, flags.map(function (f) {
+          return el("span", { class: "flag", text: "⚑ " + f });
+        })) : null
+      ]),
+      swatchPanel
+    ]);
+
+    // two axes
+    var axes = el("div", { class: "axes" }, [
+      el("div", { class: "axis" }, [
+        el("div", { class: "axhead" }, [ el("span", { class: "axname", text: "Strictness" }), el("span", { class: "axval", text: c.strictness + " / 100" }) ]),
+        meterFill(c.strictness, "#9a7b3c"),
+        el("p", { class: "axnote", text: "How much the rulebook governs daily life — rule count, fine size, and how little is left to your discretion." })
+      ]),
+      el("div", { class: "axis" }, [
+        el("div", { class: "axhead" }, [ el("span", { class: "axname", text: "Toxicity" }), el("span", { class: "axval", text: c.toxicity + " / 100" }) ]),
+        meterFill(c.toxicity, "#a5392b"),
+        el("p", { class: "axnote", text: "How the board treats people — response time, selective enforcement, and the tone residents describe." })
+      ])
+    ]);
+
+    // stats (citation block)
+    var stats = el("div", { class: "stat-grid" }, [
+      stat(money(c.dues), "Monthly dues", "per home"),
+      stat(String(c.rules), "Rules on the books", "covenants + guidelines"),
+      stat(money(c.avgFine), "Typical fine", "per cited violation"),
+      stat(c.responseWeeks + " wk", "Board response", "to a typical request")
+    ]);
+
+    // fined lookup
+    var finedGrid = el("div", { class: "fined" }, c.fined.map(finedItem));
+
+    // distribution
+    var dist = distribution(c);
+
+    // reviews
+    var reviewsWrap = el("div", { class: "reviews", id: "reviewsWrap" },
+      allReviews(c).slice().sort(function (a, b) { return (b.date || "").localeCompare(a.date || ""); }).map(reviewNode));
+
+    // form
+    var form = buildForm(c);
+
+    detailSec.innerHTML = "";
+    detailSec.appendChild(el("button", { class: "backbtn", type: "button", onclick: closeDetail, html:
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg> All communities' }));
+    detailSec.appendChild(head);
+    detailSec.appendChild(axes);
+
+    detailSec.appendChild(sectionWrap("By the numbers", stats));
+    detailSec.appendChild(sectionWrap("“Will I get fined for…?”", finedGrid,
+      "What this board allows, allows with conditions, or bans — the questions buyers actually ask."));
+    detailSec.appendChild(sectionWrap("How residents rate it", dist));
+    detailSec.appendChild(sectionWrap("Resident reviews", reviewsWrap));
+    detailSec.appendChild(sectionWrap("Add your review", form,
+      "Lived here? Add an honest read. Saved to this browser for the demo."));
+  }
+
+  function sectionWrap(title, body, sub) {
+    var s = el("section", { class: "section" }, [ el("h3", { text: title }) ]);
+    if (sub) s.appendChild(el("p", { style: "color:var(--muted);font-size:13px;margin:-6px 0 14px", text: sub }));
+    s.appendChild(body);
+    return s;
+  }
+  function stat(v, k, sub) {
+    return el("div", { class: "stat" }, [
+      el("span", { class: "v", text: v }), el("span", { class: "k", text: k }), el("span", { class: "sub", text: sub })
+    ]);
+  }
+
+  function buildForm(c) {
+    draftTier = null;
+    var errBox = el("div", { class: "err", role: "alert", "aria-live": "polite" });
+
+    var pick = el("div", { class: "swatch-pick", role: "group", "aria-label": "Your rating" },
+      TIERS.map(function (t, i) {
+        return el("button", {
+          type: "button", "aria-pressed": "false", "data-i": i, title: t.name,
+          onclick: function () {
+            draftTier = i;
+            Array.prototype.forEach.call(pick.children, function (b) {
+              b.setAttribute("aria-pressed", b.getAttribute("data-i") == i ? "true" : "false");
+            });
+          }
+        }, [ el("span", { class: "sw", style: "background:" + t.color }), el("span", { class: "nm", text: t.name }) ]);
+      })
+    );
+
+    var authorIn = el("input", { type: "text", maxlength: "48", placeholder: "e.g. Owner since 2019, or Renter, 1 yr" });
+    var verifiedIn = el("input", { type: "checkbox", id: "verChk" });
+    var bodyIn = el("textarea", { maxlength: "600", placeholder: "Be specific and fair. What's a rule that surprised you? How did the board handle a request? Concrete beats vague." });
+
+    var submit = el("button", { class: "btn", type: "submit", text: "Post review" });
+
+    var form = el("form", { class: "form", novalidate: "novalidate", onsubmit: function (e) {
+      e.preventDefault();
+      errBox.textContent = "";
+      if (draftTier == null) { errBox.textContent = "Pick a swatch — where does this HOA land for you?"; return; }
+      var body = bodyIn.value.trim();
+      if (body.length < 12) { errBox.textContent = "Add a sentence or two of detail so it's useful to a buyer."; bodyIn.focus(); return; }
+      var review = {
+        author: authorIn.value.trim() || "Anonymous resident",
+        verified: !!verifiedIn.checked,
+        tier: draftTier,
+        date: new Date().toISOString().slice(0, 10),
+        body: body,
+        mine: true
+      };
+      if (!userReviews[c.id]) userReviews[c.id] = [];
+      userReviews[c.id].unshift(review);
+      saveUserReviews(userReviews);
+      buildDetail(c);                       // re-render with the new review + updated distribution
+      var wrap = document.getElementById("reviewsWrap");
+      if (wrap) wrap.scrollIntoView({ behavior: prefersReduced() ? "auto" : "smooth", block: "center" });
+    } }, [
+      el("div", { class: "field" }, [ el("label", { html: "Your rating <span class='hint'>— the swatch is the rating</span>" }), pick ]),
+      el("div", { class: "field" }, [ el("label", { text: "Who are you?" }), authorIn ]),
+      el("div", { class: "field" }, [
+        el("label", { html: "Your review" }), bodyIn
+      ]),
+      el("div", { class: "field checkrow" }, [ verifiedIn, el("label", { for: "verChk", style: "margin:0;font-weight:400", text: "I currently live or have lived in this community (marks the review verified for the demo)" }) ]),
+      el("div", { class: "actions" }, [ submit, errBox ])
+    ]);
+    return form;
+  }
+
+  function openDetail(id) {
+    var c = SEED.filter(function (x) { return x.id === id; })[0];
+    if (!c) return;
+    buildDetail(c);
+    directorySec.classList.add("hidden");
+    detailSec.classList.add("active");
+    location.hash = id;
+    window.scrollTo({ top: 0, behavior: "auto" });
+    detailSec.focus({ preventScroll: true });
+  }
+  function closeDetail() {
+    detailSec.classList.remove("active");
+    directorySec.classList.remove("hidden");
+    if (location.hash) history.pushState("", document.title, location.pathname + location.search);
+    searchInput.focus({ preventScroll: true });
+  }
+
+  function prefersReduced() {
+    return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  // ---- disclosure dialog ----------------------------------------
+  var sheet = document.getElementById("scoreSheet");
+  document.getElementById("howScore").addEventListener("click", function () {
+    if (sheet.showModal) sheet.showModal(); else sheet.setAttribute("open", "");
+  });
+  document.getElementById("scoreClose").addEventListener("click", function () {
+    if (sheet.close) sheet.close(); else sheet.removeAttribute("open");
+  });
+  sheet.addEventListener("click", function (e) { if (e.target === sheet && sheet.close) sheet.close(); });
+
+  // ---- events ---------------------------------------------------
+  searchInput.addEventListener("input", function () { state.q = searchInput.value; renderDirectory(); });
+  sortSelect.addEventListener("change", function () { state.sort = sortSelect.value; renderDirectory(); });
+  document.getElementById("brandBtn").addEventListener("click", closeDetail);
+  window.addEventListener("popstate", function () { routeFromHash(); });
+
+  function routeFromHash() {
+    var id = location.hash.replace(/^#/, "");
+    if (id && SEED.some(function (c) { return c.id === id; })) openDetail(id);
+    else closeDetail();
+  }
+
+  // ---- boot -----------------------------------------------------
+  buildLegend();
+  renderDirectory();
+  routeFromHash();
+})();
+</script>
+</body>
+</html>
