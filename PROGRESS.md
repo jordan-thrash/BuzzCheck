@@ -8,6 +8,49 @@ An append-only log of build cycles. Newest entries on top. Each cycle records
 
 ---
 
+## Cycle 3 — Cross-community "dealbreaker" search + unified stances data
+**Date:** 2026-06-29
+
+**What changed**
+- Refactored the per-HOA `fined` arrays (6 ad-hoc, inconsistent topics each) into a
+  **complete `stances` map** covering the same **10 canonical dealbreaker topics** for
+  every community: chickens, RV/boat, short-term rental, solar, paint, fence, yard signs,
+  basketball hoop, holiday lights, flagpole. 80 short, in-character verdict+note pairs —
+  real content, no placeholders. This makes coverage complete and consistent.
+- Added the **"I want to be able to…" dealbreaker lens** on the directory — the flip side
+  of the per-HOA lookup. Pick a topic and every card grows a verdict strip
+  (Allowed / Conditional / Banned + the one-line note); the directory **re-sorts
+  allowed-first**, a **"Hide where it's banned"** filter appears, and the count line reads
+  "where you can keep backyard chickens — 2 allow or permit with conditions." This is
+  discovery by dealbreaker, which is how buyers with a hard requirement actually shop.
+- The per-community **"Will I get fined for…?"** lookup now renders all 10 topics from the
+  same `stances` data; **compare** rows do too — one source of truth, three surfaces.
+- Sort control disables while a lens is active (the lens drives order).
+
+**Why**
+- The fined-for lookup is the killer transparency feature, but per-community it only helps
+  once you're already looking at a community. A buyer whose dealbreaker is "I need to keep
+  my boat" wants to start from the dealbreaker and see who allows it. Cross-community
+  search closes that loop and turns the directory into a real shortlisting tool.
+
+**Subtracted**
+- Removed the `COMPARE_TOPICS` keyword list and the `verdictFor()` fuzzy-matching hack —
+  compare now reads `stances` directly. Also retired the grab-bag of one-off topics
+  (Clothesline, Mailbox style, Pressure-washing, Storm door, Desert landscaping, Trash-can
+  storage, Vegetable garden) in favor of the consistent 10. Less code, cleaner data.
+
+**Verified**
+- Headless, no console errors. 10 chips; activating one adds a verdict row to all 8 cards,
+  disables sort, sorts allowed-first; "Hide banned" narrows chickens→2, STR→3; Clear
+  restores. Detail lookup renders 10 items; compare renders 18 rows (8 metrics + 10
+  topics). Screenshot reviewed.
+
+**Still weak / noticed**
+- Reviews still not sortable/filterable (verified-first / recency).
+- Directory has search + lens but no combined filter panel (tier + dues + lens together).
+- Still 8 communities; with full stances, more communities now scale cleanly.
+- No contribute-a-community flow.
+
 ## Cycle 2 — Compare mode (pin 2–3 communities, side by side)
 **Date:** 2026-06-29
 

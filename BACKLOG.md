@@ -18,16 +18,20 @@ Re-rank every cycle. `[x]` = shipped (kept here briefly for memory, then pruned)
 ## Shipped in Cycle 2
 - [x] Compare mode — pin 2–3, side-by-side table with fined-for stances
 
+## Shipped in Cycle 3
+- [x] Unified 10-topic `stances` data for every community
+- [x] Cross-community "dealbreaker" lens (where can I keep chickens?) + hide-banned
+
 ## Next up (high leverage)
-1. **Cross-community fined-for search** — "Where can I keep chickens / park an RV / run an
-   STR?" Flip the lookup so a buyer searches by their dealbreaker, not by community. This
-   is discovery; compare only helps once you've shortlisted.
-2. **Directory filters** — by tier, dues range, allows-X (e.g. "show me chill + allows
-   chickens"). Turns the directory into a real shortlist tool; pairs with #1.
-3. **More seed communities (→ ~12–14)** with type variety (condo HOA, 55+, townhome,
-   master-planned) so the directory feels alive and comparisons are meaningful.
-4. **Sort & filter reviews** — recency vs. verified-first; filter to verified residents.
+1. **More seed communities (→ ~12–14)** with type variety (condo HOA, 55+, townhome,
+   master-planned). Now that stances + reviews are structured, more communities make the
+   directory, lens, and compare all feel alive — and make the lens results meaningful
+   (right now some topics return only 2–3 matches).
+2. **Sort & filter reviews** — recency vs. verified-first; filter to verified residents.
    Trust signals: weight/badge verified, show recency prominently.
+3. **Combined filter panel** — tier + dues range alongside the lens, so a buyer can say
+   "chill-ish AND allows chickens AND under $150/mo." Pairs with the lens.
+4. **Tighten the lens count copy** when hide-banned is on (currently slightly redundant).
 
 ## Later (polish & credibility)
 6. **Contribute-a-community flow** — add a new HOA + its fined-for stances, persisted.
