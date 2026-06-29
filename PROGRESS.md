@@ -8,6 +8,48 @@ An append-only log of build cycles. Newest entries on top. Each cycle records
 
 ---
 
+## Cycle 2 — Compare mode (pin 2–3 communities, side by side)
+**Date:** 2026-06-29
+
+**What changed**
+- Added **Compare mode**, the top backlog item. A buyer choosing between neighborhoods
+  can now pin up to 3 communities and see them side by side.
+- Each directory card grew a quiet **"+ Compare" / "✓ Comparing"** footer button.
+  Restructured the card from a single `<button>` into a container holding a `card-open`
+  button (opens detail) and a sibling `card-compare` button — no nested buttons, valid
+  and keyboard-accessible.
+- A **sticky compare tray** appears when ≥1 is pinned: swatch-dot chips with remove (×),
+  a live "n of 3 pinned" count, Clear, and a Compare button (disabled until 2+).
+- The **compare view** is a semantic `<table>`: swatch-strip column headers, then rows
+  for vibe, strictness, toxicity, dues, rules, avg fine, board response, red flags, and
+  six canonical "fined-for" topics (chickens, RV/boat, STR, solar, paint, fence) matched
+  loosely against each HOA's stance and shown as Allowed/Conditional/Banned pills.
+- **Encodes the philosophy:** lower dues/rules/fines/response and lower *toxicity* get a
+  green "◀" best marker — but strictness deliberately does NOT, because strict isn't bad,
+  toxic is. Header copy says so explicitly.
+- Hash-routed (`#compare`) with working back/forward; horizontal-scroll on mobile.
+
+**Why**
+- Comparison is the decision a buyer actually makes — rarely "is this HOA good?" but
+  "which of these two should I sign for?" Putting dues, fines, and dealbreaker stances in
+  one glance is the most direct service to the north star after the core read itself.
+
+**Subtracted**
+- Removed the card's `translateY(-1px)` hover lift. Extra motion reads as AI filler; the
+  brief says spend boldness only on the swatch. Hover is now just a quiet border/shadow.
+
+**Verified**
+- Headless: no console errors. Pin 2 and 3, open compare (14 rows, correct columns,
+  10 verdict pills), back, then open a detail page — all work. Tray show/hide and the
+  2+ gate behave. Full-page screenshot reviewed.
+
+**Still weak / noticed**
+- Reviews still not sortable/filterable (verified-first, recency).
+- No cross-community "who allows chickens?" search yet — compare answers it for a chosen
+  few, but not for discovery.
+- Only 8 communities; compare would shine with more variety (condo/55+/townhome).
+- Compare can't be reached from a detail page (only from the directory tray).
+
 ## Cycle 1 — Foundation: the artifact, the swatch, and the core flows
 **Date:** 2026-06-29
 
