@@ -1,0 +1,11 @@
+# Deploying fenceline on Netlify:
+# set the site's "base directory" to `fenceline` so this file is picked up.
+[build]
+  command = "npm run build"
+  publish = "out"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"

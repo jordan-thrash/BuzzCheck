@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+/*
+ * fenceline — "Property Line" design system
+ * A surveyor's field report on the neighborhood's temperament.
+ * Full token documentation: design/THEME.md
+ */
+
+@theme {
+  /* ---- Surfaces & ink (warm paper, drafting ink) ---- */
+  --color-paper: #f5f2ea;
+  --color-card: #fdfbf5;
+  --color-well: #eeeadf;
+  --color-ink: #241f1a;
+  --color-ink-soft: #5c554b;
+  --color-ink-faint: #857c6c;
+  --color-line: #ddd7c9;
+  --color-line-strong: #b9b19d;
+
+  /* ---- Brand accent: survey blue (interactive only, never severity) ---- */
+  --color-survey: #1f4d8a;
+  --color-survey-deep: #173a6a;
+  --color-survey-tint: #e4ebf5;
+
+  /* ---- Reserved severity ramp (canonical fills — the vibe scale) ---- */
+  --color-chill: #059669;
+  --color-mellow: #65a30d;
+  --color-uptight: #d97706;
+  --color-overbearing: #ea580c;
+  --color-hostile: #b91c1c;
+
+  /* ---- Severity ramp, AA-safe text variants on paper ---- */
+  --color-chill-deep: #047857;
+  --color-mellow-deep: #4d7c0f;
+  --color-uptight-deep: #92400e;
+  --color-overbearing-deep: #9a3412;
+  --color-hostile-deep: #991b1b;
+
+  /* ---- Severity ramp, background tints ---- */
+  --color-chill-tint: #ddefe6;
+  --color-mellow-tint: #e9f0d6;
+  --color-uptight-tint: #f9ecd4;
+  --color-overbearing-tint: #fae3d6;
+  --color-hostile-tint: #f6dcdc;
+
+  /* ---- Type ---- */
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-mono:
+    ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas,
+    "Liberation Mono", monospace;
+
+  /* ---- Elevation (mostly flat; one lift for cards/popovers) ---- */
+  --shadow-plot: 0 1px 2px rgb(36 31 26 / 0.05), 0 4px 14px rgb(36 31 26 / 0.06);
+}
+
+/* Graph-paper ground: a whisper of surveyor's grid on the page itself */
+body {
+  background-color: var(--color-paper);
+  background-image: radial-gradient(rgb(185 177 157 / 0.28) 1px, transparent 1px);
+  background-size: 26px 26px;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+/* One focus language everywhere: 2px survey-blue outline, offset */
+:focus-visible {
+  outline: 2px solid var(--color-survey);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+::selection {
+  background: var(--color-survey-tint);
+  color: var(--color-ink);
+}
+
+/* Data reads like citations: mono + lined-up digits */
+.cite {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Micro-label: the uppercase mono caption used on rulers, title blocks, chips */
+.label-micro {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem; /* 11px */
+  line-height: 1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Dotted leader between a label and its value, legal-index style */
+.leader {
+  flex: 1 1 auto;
+  min-width: 1rem;
+  border-bottom: 1px dotted var(--color-line-strong);
+  transform: translateY(-0.3em);
+}
+
+/* Range inputs (review composer) pick up the accent, not the ramp */
+input[type="range"] {
+  accent-color: var(--color-survey);
+}
+
+/* No decorative animation, ever; kill residual motion for reduced-motion users */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
